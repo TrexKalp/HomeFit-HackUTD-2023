@@ -29,6 +29,7 @@ import {
   FiChevronDown,
 } from "react-icons/fi";
 import Page1 from "./Page1";
+import Upload from "./Upload";
 
 const LinkItems = [
   { name: "Home", icon: FiHome },
@@ -210,6 +211,7 @@ const SidebarWithHeader = () => {
       <MobileNav onOpen={onOpen} />
       <Box ml={{ base: 0, md: 60 }} p="4">
         <Page1 />
+        <Upload />
       </Box>
     </Box>
   );
