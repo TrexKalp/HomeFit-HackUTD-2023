@@ -30,6 +30,7 @@ import {
 } from "react-icons/fi";
 import Page1 from "./Page1";
 import Upload from "./Upload";
+import Graphs from "./Graphs";
 
 const LinkItems = [
   { name: "Home", icon: FiHome },
@@ -212,6 +213,7 @@ const SidebarWithHeader = () => {
       <Box ml={{ base: 0, md: 60 }} p="4">
         <Page1 />
         <Upload />
+        <Graphs />
       </Box>
     </Box>
   );

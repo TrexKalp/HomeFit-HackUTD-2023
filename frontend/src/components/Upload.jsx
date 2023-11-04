@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   Flex,
   Box,
@@ -10,7 +11,7 @@ import {
   AlertIcon,
   Text,
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { Pie } from "react-chartjs-2";
 
 export default function Upload() {
   const [file, setFile] = useState(null);
@@ -48,6 +49,19 @@ export default function Upload() {
       setUploadStatus({ type: "error", message: "File upload failed." });
       console.error("Error uploading file:", error);
     }
+  };
+
+  const data = {
+    labels: ["Approved", "Declined"],
+    datasets: [
+      {
+        label: "Approval Stats",
+        data: [approvalStats.approved, approvalStats.declined],
+        backgroundColor: ["rgba(75, 192, 192, 0.2)", "rgba(255, 99, 132, 0.2)"],
+        borderColor: ["rgba(75, 192, 192, 1)", "rgba(255, 99, 132, 1)"],
+        borderWidth: 1,
+      },
+    ],
   };
 
   return (
@@ -101,6 +115,9 @@ export default function Upload() {
           </Stack>
         </Box>
       </Stack>
+      <Box width={"50%"}>
+        <Pie data={data} />
+      </Box>
     </Flex>
   );
 }
