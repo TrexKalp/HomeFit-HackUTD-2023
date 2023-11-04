@@ -9,6 +9,10 @@ import {
   Button,
   Heading,
   useColorModeValue,
+  Slider,
+  SliderTrack,
+  SliderFilledTrack,
+  SliderThumb,
 } from "@chakra-ui/react";
 import { useState } from "react";
 
@@ -87,77 +91,144 @@ export default function Page1() {
           p={8}
         >
           <Stack spacing={4}>
+            {/* Slider for Gross Monthly Income */}
             <FormControl id="monthlyIncome" isRequired>
-              <FormLabel>Gross Monthly Income</FormLabel>
-              <NumberInput min={0}>
-                <NumberInputField
-                  onChange={(e) => setGrossMonthlyIncome(e.target.value)}
-                />
-              </NumberInput>
+              <FormLabel>Gross Monthly Income: ${grossMonthlyIncome}</FormLabel>
+              <Slider
+                min={1000}
+                max={20000}
+                step={500}
+                value={grossMonthlyIncome}
+                onChange={setGrossMonthlyIncome}
+              >
+                <SliderTrack>
+                  <SliderFilledTrack />
+                </SliderTrack>
+                <SliderThumb />
+              </Slider>
             </FormControl>
 
+            {/* Slider for Credit Score */}
             <FormControl id="creditScore" isRequired>
-              <FormLabel>Credit Score</FormLabel>
-              <NumberInput min={300} max={850}>
-                <NumberInputField
-                  onChange={(e) => setCreditScore(e.target.value)}
-                />
-              </NumberInput>
+              <FormLabel>Credit Score: {creditScore}</FormLabel>
+              <Slider
+                min={300}
+                max={850}
+                step={10}
+                value={creditScore}
+                onChange={setCreditScore}
+              >
+                <SliderTrack>
+                  <SliderFilledTrack />
+                </SliderTrack>
+                <SliderThumb />
+              </Slider>
             </FormControl>
 
+            {/* Slider for Home Appraised Value */}
             <FormControl id="homeAppraisedValue" isRequired>
-              <FormLabel>Appraisal Value</FormLabel>
-              <NumberInput min={0}>
-                <NumberInputField
-                  onChange={(e) => setHomeAppraisedValue(e.target.value)}
-                />
-              </NumberInput>
+              <FormLabel>Home Appraised Value: ${homeAppraisedValue}</FormLabel>
+              <Slider
+                min={50000}
+                max={2000000}
+                step={5000}
+                value={homeAppraisedValue}
+                onChange={setHomeAppraisedValue}
+              >
+                <SliderTrack>
+                  <SliderFilledTrack />
+                </SliderTrack>
+                <SliderThumb />
+              </Slider>
             </FormControl>
 
+            {/* Slider for Down Payment Amount */}
             <FormControl id="downPaymentAmount" isRequired>
-              <FormLabel>Down Payment</FormLabel>
-              <NumberInput min={0}>
-                <NumberInputField
-                  onChange={(e) => setDownPaymentAmount(e.target.value)}
-                />
-              </NumberInput>
+              <FormLabel>Down Payment Amount: ${downPaymentAmount}</FormLabel>
+              <Slider
+                min={0}
+                max={100000}
+                step={1000}
+                value={downPaymentAmount}
+                onChange={setDownPaymentAmount}
+              >
+                <SliderTrack>
+                  <SliderFilledTrack />
+                </SliderTrack>
+                <SliderThumb />
+              </Slider>
             </FormControl>
 
+            {/* Slider for Monthly Credit Card Payment */}
             <FormControl id="monthlyCreditCardPayment" isRequired>
-              <FormLabel>Credit Card Payment</FormLabel>
-              <NumberInput min={0}>
-                <NumberInputField
-                  onChange={(e) => setMonthlyCreditCardPayment(e.target.value)}
-                />
-              </NumberInput>
+              <FormLabel>
+                Monthly Credit Card Payment: ${monthlyCreditCardPayment}
+              </FormLabel>
+              <Slider
+                min={0}
+                max={5000}
+                step={50}
+                value={monthlyCreditCardPayment}
+                onChange={setMonthlyCreditCardPayment}
+              >
+                <SliderTrack>
+                  <SliderFilledTrack />
+                </SliderTrack>
+                <SliderThumb />
+              </Slider>
             </FormControl>
 
+            {/* Slider for Monthly Car Payment */}
             <FormControl id="monthlyCarPayment" isRequired>
-              <FormLabel>Car Payment</FormLabel>
-              <NumberInput min={0}>
-                <NumberInputField
-                  onChange={(e) => setMonthlyCarPayment(e.target.value)}
-                />
-              </NumberInput>
+              <FormLabel>Monthly Car Payment: ${monthlyCarPayment}</FormLabel>
+              <Slider
+                min={0}
+                max={2000}
+                step={50}
+                value={monthlyCarPayment}
+                onChange={setMonthlyCarPayment}
+              >
+                <SliderTrack>
+                  <SliderFilledTrack />
+                </SliderTrack>
+                <SliderThumb />
+              </Slider>
             </FormControl>
 
+            {/* Slider for Student Loan Payment */}
             <FormControl id="studentLoanPayment" isRequired>
-              <FormLabel>Student Loan Payment</FormLabel>
-              <NumberInput min={0}>
-                <NumberInputField
-                  onChange={(e) => setStudentLoanPayment(e.target.value)}
-                />
-              </NumberInput>
+              <FormLabel>Student Loan Payment: ${studentLoanPayment}</FormLabel>
+              <Slider
+                min={0}
+                max={2000}
+                step={50}
+                value={studentLoanPayment}
+                onChange={setStudentLoanPayment}
+              >
+                <SliderTrack>
+                  <SliderFilledTrack />
+                </SliderTrack>
+                <SliderThumb />
+              </Slider>
             </FormControl>
 
-            {/* Added FormControl for estimated monthly mortgage payment */}
+            {/* Slider for Estimated Monthly Mortgage Payment */}
             <FormControl id="estMonthlyMortgagePayment" isRequired>
-              <FormLabel>Estimated Monthly Mortgage Payment</FormLabel>
-              <NumberInput min={0}>
-                <NumberInputField
-                  onChange={(e) => setEstMonthlyMortgagePayment(e.target.value)}
-                />
-              </NumberInput>
+              <FormLabel>
+                Estimated Monthly Mortgage Payment: ${estMonthlyMortgagePayment}
+              </FormLabel>
+              <Slider
+                min={0}
+                max={10000}
+                step={100}
+                value={estMonthlyMortgagePayment}
+                onChange={setEstMonthlyMortgagePayment}
+              >
+                <SliderTrack>
+                  <SliderFilledTrack />
+                </SliderTrack>
+                <SliderThumb />
+              </Slider>
             </FormControl>
 
             <Stack spacing={10} pt={2}>
