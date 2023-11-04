@@ -5,9 +5,6 @@ import {
   FormLabel,
   NumberInput,
   NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
   Stack,
   Button,
   Heading,
@@ -16,44 +13,63 @@ import {
 import { useState } from "react";
 
 export default function Page1() {
-  // States to store the input values
-  const [monthlyIncome, setMonthlyIncome] = useState("");
+  // Adjusted state variables to match the server's expected format and added estMonthlyMortgagePayment
+  const [grossMonthlyIncome, setGrossMonthlyIncome] = useState("");
   const [creditScore, setCreditScore] = useState("");
-  const [appraisalValue, setAppraisalValue] = useState("");
-  const [downPayment, setDownPayment] = useState("");
-  const [creditCardPayment, setCreditCardPayment] = useState("");
-  const [carPayment, setCarPayment] = useState("");
+  const [homeAppraisedValue, setHomeAppraisedValue] = useState("");
+  const [downPaymentAmount, setDownPaymentAmount] = useState("");
+  const [monthlyCreditCardPayment, setMonthlyCreditCardPayment] = useState("");
+  const [monthlyCarPayment, setMonthlyCarPayment] = useState("");
+  const [studentLoanPayment, setStudentLoanPayment] = useState("");
+  const [estMonthlyMortgagePayment, setEstMonthlyMortgagePayment] =
+    useState(""); // Added state for estimated monthly mortgage payment
 
   // Function to handle form submission
-  const checkEligibility = () => {
-    // Construct the data object from state
+  const checkEligibility = async () => {
     const financialData = {
-      monthlyIncome,
+      grossMonthlyIncome,
       creditScore,
-      appraisalValue,
-      downPayment,
-      creditCardPayment,
-      carPayment,
+      homeAppraisedValue,
+      downPaymentAmount,
+      monthlyCreditCardPayment,
+      monthlyCarPayment,
+      studentLoanPayment,
+      estMonthlyMortgagePayment, // Included in the data object
     };
 
-    // Send this data to the Express server
-    fetch("http://localhost:3001/api/check-eligibility", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(financialData),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        // Handle the response here
-        // For example, you might want to show the result in the UI or alert the user
-        alert(`Eligibility Check: ${data.result}`);
-      })
-      .catch((error) => {
-        // Handle any errors here
-        console.error("Error fetching data:", error);
-      });
+    try {
+      const response = await fetch(
+        "http://localhost:3001/api/check-eligibility",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(financialData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.approved === "Yes") {
+        alert("Congratulations! You are eligible to buy a home.");
+      } else {
+        const suggestionsMessage =
+          data.suggestions.length > 0
+            ? `Suggestions: ${data.suggestions.join(", ")}`
+            : "No suggestions available.";
+        alert(`Eligibility Check: No\n${suggestionsMessage}`);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      alert(
+        "An error occurred while checking eligibility. Please try again later."
+      );
+    }
   };
 
   return (
@@ -71,16 +87,16 @@ export default function Page1() {
           p={8}
         >
           <Stack spacing={4}>
-            <FormControl id="monthlyincome" isRequired>
+            <FormControl id="monthlyIncome" isRequired>
               <FormLabel>Gross Monthly Income</FormLabel>
               <NumberInput min={0}>
                 <NumberInputField
-                  onChange={(e) => setMonthlyIncome(e.target.value)}
+                  onChange={(e) => setGrossMonthlyIncome(e.target.value)}
                 />
               </NumberInput>
             </FormControl>
 
-            <FormControl id="credit" isRequired>
+            <FormControl id="creditScore" isRequired>
               <FormLabel>Credit Score</FormLabel>
               <NumberInput min={300} max={850}>
                 <NumberInputField
@@ -89,38 +105,57 @@ export default function Page1() {
               </NumberInput>
             </FormControl>
 
-            <FormControl id="Appraisal" isRequired>
+            <FormControl id="homeAppraisedValue" isRequired>
               <FormLabel>Appraisal Value</FormLabel>
               <NumberInput min={0}>
                 <NumberInputField
-                  onChange={(e) => setAppraisalValue(e.target.value)}
+                  onChange={(e) => setHomeAppraisedValue(e.target.value)}
                 />
               </NumberInput>
             </FormControl>
 
-            <FormControl id="downpayment" isRequired>
+            <FormControl id="downPaymentAmount" isRequired>
               <FormLabel>Down Payment</FormLabel>
               <NumberInput min={0}>
                 <NumberInputField
-                  onChange={(e) => setDownPayment(e.target.value)}
+                  onChange={(e) => setDownPaymentAmount(e.target.value)}
                 />
               </NumberInput>
             </FormControl>
 
-            <FormControl id="creditcard" isRequired>
+            <FormControl id="monthlyCreditCardPayment" isRequired>
               <FormLabel>Credit Card Payment</FormLabel>
               <NumberInput min={0}>
                 <NumberInputField
-                  onChange={(e) => setCreditCardPayment(e.target.value)}
+                  onChange={(e) => setMonthlyCreditCardPayment(e.target.value)}
                 />
               </NumberInput>
             </FormControl>
 
-            <FormControl id="carpayment" isRequired>
+            <FormControl id="monthlyCarPayment" isRequired>
               <FormLabel>Car Payment</FormLabel>
               <NumberInput min={0}>
                 <NumberInputField
-                  onChange={(e) => setCarPayment(e.target.value)}
+                  onChange={(e) => setMonthlyCarPayment(e.target.value)}
+                />
+              </NumberInput>
+            </FormControl>
+
+            <FormControl id="studentLoanPayment" isRequired>
+              <FormLabel>Student Loan Payment</FormLabel>
+              <NumberInput min={0}>
+                <NumberInputField
+                  onChange={(e) => setStudentLoanPayment(e.target.value)}
+                />
+              </NumberInput>
+            </FormControl>
+
+            {/* Added FormControl for estimated monthly mortgage payment */}
+            <FormControl id="estMonthlyMortgagePayment" isRequired>
+              <FormLabel>Estimated Monthly Mortgage Payment</FormLabel>
+              <NumberInput min={0}>
+                <NumberInputField
+                  onChange={(e) => setEstMonthlyMortgagePayment(e.target.value)}
                 />
               </NumberInput>
             </FormControl>
