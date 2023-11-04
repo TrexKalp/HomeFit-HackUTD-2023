@@ -6,7 +6,7 @@ const app = express();
 const port = 3001; // or another port that you prefer
 const mongoose=require('mongoose')
 const url = `mongodb+srv://root:rootroot@eag.z6jqmoe.mongodb.net/train_data?retryWrites=true&w=majority`;
-const CustomerData = require('../modals/TaskModel');
+const CustomerData = require('../modals/LoanDataModel');
 const connectionParams={
     useNewUrlParser: true,
     useUnifiedTopology: true 
@@ -23,40 +23,72 @@ mongoose.connect(url,connectionParams)
       return res.status(200).json(allDogs);
     });
 
-app.use(cors()); // Use cors middleware to allow cross-origin requests
-app.use(bodyParser.json()); // Use body-parser middleware to parse JSON bodies
 
-// This is the route that will handle the POST request from the React frontend
+app.use(cors());
+app.use(bodyParser.json());
+
 app.post("/api/check-eligibility", (req, res) => {
   const {
-    monthlyIncome,
+    grossMonthlyIncome,
+    monthlyCarPayment,
+    monthlyCreditCardPayment,
+    studentLoanPayment,
+    homeAppraisedValue,
+    estMonthlyMortgagePayment,
+    downPaymentAmount,
     creditScore,
-    appraisalValue,
-    downPayment,
-    creditCardPayment,
-    carPayment,
   } = req.body;
 
-  // Here you would include the logic to determine if the user is eligible
-  // For demonstration purposes, I'm returning a simple 'Approved' or 'Not Approved'
-  let result = "Not Approved";
-  const monthlyDebt = parseFloat(creditCardPayment) + parseFloat(carPayment);
-  const ltv =
-    (parseFloat(appraisalValue) - parseFloat(downPayment)) /
-    parseFloat(appraisalValue);
-  const dti = (monthlyDebt / parseFloat(monthlyIncome)) * 100;
-  const fedti =
-    (parseFloat(req.body.mortgage) / parseFloat(monthlyIncome)) * 100;
+  const income = parseFloat(grossMonthlyIncome);
+  const carPayment = parseFloat(monthlyCarPayment);
+  const creditCardPayment = parseFloat(monthlyCreditCardPayment);
+  const studentPayment = parseFloat(studentLoanPayment);
+  const appraisedValue = parseFloat(homeAppraisedValue);
+  const mortgagePayment = parseFloat(estMonthlyMortgagePayment);
+  const downPayment = parseFloat(downPaymentAmount);
+  const score = parseInt(creditScore, 10);
+  // Correct calculation using parsed values
+  const loanAmount = appraisedValue - downPayment;
+  const LTV = (loanAmount / appraisedValue) * 100;
 
-  // Check if all criteria are met
-  if (creditScore >= 640 && ltv < 0.8 && dti < 43 && fedti <= 28) {
-    result = "Approved";
+  const monthlyDebtPayments =
+    carPayment + creditCardPayment + studentPayment + mortgagePayment;
+  const DTI = (monthlyDebtPayments / income) * 100;
+  const FEDTI = (mortgagePayment / income) * 100;
+
+  console.log({ LTV, DTI, FEDTI, score });
+
+  let approved = score >= 640 && LTV < 95 && DTI < 43 && FEDTI <= 28;
+  let PMI = null;
+  let suggestions = [];
+
+  if (LTV >= 80 && LTV < 95) {
+    PMI = (loanAmount * 0.01) / 12; // PMI calculation
   }
 
-  // Respond to the POST request with the result
-  res.json({ result });
+  if (!approved) {
+    if (score < 640) suggestions.push("Improve your credit score.");
+    if (LTV >= 80) {
+      suggestions.push("Increase your down payment amount.");
+      if (PMI) {
+        suggestions.push(
+          `Consider the additional cost of Private Mortgage Insurance (PMI): $${PMI.toFixed(
+            2
+          )} per month.`
+        );
+      }
+    }
+    if (DTI >= 43) suggestions.push("Pay off some current debt.");
+    if (FEDTI > 28) suggestions.push("Look for a less expensive home.");
+  }
+
+  res.json({
+    approved: approved ? "Yes" : "No",
+    PMI: PMI ? `Required - $${PMI.toFixed(2)} per month` : "Not Required",
+    suggestions,
+  });
 });
 
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+  console.log(`Server listening at http://localhost:${port}`);
 });
