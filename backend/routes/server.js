@@ -5,6 +5,26 @@ const fastCsv = require("fast-csv");
 const fs = require("fs");
 const app = express();
 const upload = multer({ dest: "uploads/" });
+const port = 3001; // or another port that you prefer
+const mongoose=require('mongoose')
+const url = `mongodb+srv://root:rootroot@eag.z6jqmoe.mongodb.net/train_data?retryWrites=true&w=majority`;
+const CustomerData = require('../modals/LoanDataModel');
+const connectionParams={
+    useNewUrlParser: true,
+    useUnifiedTopology: true 
+}
+mongoose.connect(url,connectionParams)
+    .then( () => {
+        console.log('Connected to the database ')
+    })
+    .catch( (err) => {
+        console.error(`Error connecting to the database. n${err}`);
+    })
+    app.get("/dogs", async (req, res) => {
+      const allDogs = await CustomerData.find({});
+      return res.status(200).json(allDogs);
+    });
+
 
 app.use(cors());
 app.use(express.json());
