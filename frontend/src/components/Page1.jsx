@@ -41,6 +41,12 @@ export default function Page1() {
       estMonthlyMortgagePayment, // Included in the data object
     };
 
+    const minimumDownPaymentRequired = homeAppraisedValue * 0.2; // 20% of home value
+    if (downPaymentAmount < minimumDownPaymentRequired) {
+      alert(`Your down payment must be at least ${minimumDownPaymentRequired}`);
+      return false;
+    }
+
     try {
       const response = await fetch(
         "http://localhost:3001/api/check-eligibility",
@@ -147,7 +153,7 @@ export default function Page1() {
               <FormLabel>Down Payment Amount: ${downPaymentAmount}</FormLabel>
               <Slider
                 min={0}
-                max={100000}
+                max={1000000}
                 step={1000}
                 value={downPaymentAmount}
                 onChange={setDownPaymentAmount}
