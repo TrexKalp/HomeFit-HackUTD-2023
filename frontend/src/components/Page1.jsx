@@ -172,8 +172,8 @@ export default function Page1() {
               </FormLabel>
               <Slider
                 min={0}
-                max={5000}
-                step={50}
+                max={10000}
+                step={100}
                 value={monthlyCreditCardPayment}
                 onChange={setMonthlyCreditCardPayment}
               >
@@ -189,8 +189,8 @@ export default function Page1() {
               <FormLabel>Monthly Car Payment: ${monthlyCarPayment}</FormLabel>
               <Slider
                 min={0}
-                max={2000}
-                step={50}
+                max={10000}
+                step={100}
                 value={monthlyCarPayment}
                 onChange={setMonthlyCarPayment}
               >
@@ -206,8 +206,8 @@ export default function Page1() {
               <FormLabel>Student Loan Payment: ${studentLoanPayment}</FormLabel>
               <Slider
                 min={0}
-                max={2000}
-                step={50}
+                max={10000}
+                step={100}
                 value={studentLoanPayment}
                 onChange={setStudentLoanPayment}
               >
