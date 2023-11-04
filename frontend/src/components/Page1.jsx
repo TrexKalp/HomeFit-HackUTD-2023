@@ -1,43 +1,67 @@
-"use client";
-
 import {
   Flex,
   Box,
   FormControl,
   FormLabel,
-  Input,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
-  InputGroup,
-  HStack,
-  InputRightElement,
   Stack,
   Button,
   Heading,
-  Text,
   useColorModeValue,
-  Link,
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 
 export default function Page1() {
-  const [showPassword, setShowPassword] = useState(false);
+  // States to store the input values
+  const [monthlyIncome, setMonthlyIncome] = useState("");
+  const [creditScore, setCreditScore] = useState("");
+  const [appraisalValue, setAppraisalValue] = useState("");
+  const [downPayment, setDownPayment] = useState("");
+  const [creditCardPayment, setCreditCardPayment] = useState("");
+  const [carPayment, setCarPayment] = useState("");
+
+  // Function to handle form submission
+  const checkEligibility = () => {
+    // Construct the data object from state
+    const financialData = {
+      monthlyIncome,
+      creditScore,
+      appraisalValue,
+      downPayment,
+      creditCardPayment,
+      carPayment,
+    };
+
+    // Send this data to the Express server
+    fetch("http://localhost:3001/api/check-eligibility", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(financialData),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        // Handle the response here
+        // For example, you might want to show the result in the UI or alert the user
+        alert(`Eligibility Check: ${data.result}`);
+      })
+      .catch((error) => {
+        // Handle any errors here
+        console.error("Error fetching data:", error);
+      });
+  };
 
   return (
-    <Flex
-      minH={"100vh"}
-      align={"center"}
-      justify={"center"}
-      bg={useColorModeValue("gray.50", "gray.800")}
-    >
+    <Flex minH={"80vh"} align={"center"} justify={"center"}>
       <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
         <Stack align={"center"}>
           <Heading fontSize={"4xl"} textAlign={"center"}>
-            Are you ready to buy a home? Lets Check!
+            Are you ready to buy a home? Let's Check!
           </Heading>
         </Stack>
         <Box
@@ -49,72 +73,61 @@ export default function Page1() {
           <Stack spacing={4}>
             <FormControl id="monthlyincome" isRequired>
               <FormLabel>Gross Monthly Income</FormLabel>
-              <NumberInput defaultValue={15} min={10} max={20}>
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
+              <NumberInput min={0}>
+                <NumberInputField
+                  onChange={(e) => setMonthlyIncome(e.target.value)}
+                />
               </NumberInput>
             </FormControl>
 
             <FormControl id="credit" isRequired>
               <FormLabel>Credit Score</FormLabel>
-              <NumberInput defaultValue={15} min={10} max={20}>
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
+              <NumberInput min={300} max={850}>
+                <NumberInputField
+                  onChange={(e) => setCreditScore(e.target.value)}
+                />
               </NumberInput>
             </FormControl>
 
             <FormControl id="Appraisal" isRequired>
               <FormLabel>Appraisal Value</FormLabel>
-              <NumberInput defaultValue={15} min={10} max={20}>
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
+              <NumberInput min={0}>
+                <NumberInputField
+                  onChange={(e) => setAppraisalValue(e.target.value)}
+                />
               </NumberInput>
             </FormControl>
 
             <FormControl id="downpayment" isRequired>
               <FormLabel>Down Payment</FormLabel>
-              <NumberInput defaultValue={15} min={10} max={20}>
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
+              <NumberInput min={0}>
+                <NumberInputField
+                  onChange={(e) => setDownPayment(e.target.value)}
+                />
               </NumberInput>
             </FormControl>
 
             <FormControl id="creditcard" isRequired>
               <FormLabel>Credit Card Payment</FormLabel>
-              <NumberInput defaultValue={15} min={10} max={20}>
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
+              <NumberInput min={0}>
+                <NumberInputField
+                  onChange={(e) => setCreditCardPayment(e.target.value)}
+                />
               </NumberInput>
             </FormControl>
+
             <FormControl id="carpayment" isRequired>
               <FormLabel>Car Payment</FormLabel>
-              <NumberInput defaultValue={15} min={10} max={20}>
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
+              <NumberInput min={0}>
+                <NumberInputField
+                  onChange={(e) => setCarPayment(e.target.value)}
+                />
               </NumberInput>
             </FormControl>
 
             <Stack spacing={10} pt={2}>
               <Button
-                loadingText="Submitting"
+                onClick={checkEligibility}
                 size="lg"
                 bg={"blue.400"}
                 color={"white"}
