@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useState} from "react";
 import {
   Box,
   Flex,
@@ -108,7 +108,7 @@ const NavItem = ({ icon, children, ...rest }) => {
 
 const SidebarWithHeader = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-
+  const [problemFields,setproblemFields]=useState([])
   return (
     <Router>
       <Box minH="100vh" bg={useColorModeValue("gray.100", "gray.900")}>
@@ -131,9 +131,9 @@ const SidebarWithHeader = () => {
         <Box ml={{ base: 0, md: 60 }} p="4">
           <Routes>
             <Route exact path="/" element={<Page1 />} />
-            <Route exact path="/home" element={<Page1 />} />
+            <Route exact path="/home" element={<Page1 setproblemFields={setproblemFields} />} />
             <Route path="/Upload" element={<Upload />} />
-            <Route path="/visualization" element={<Graphs />} />
+            <Route path="/visualization" element={<Graphs problemFields={problemFields} />} />
             {/*<Route path="/favourites" element={<Favourites />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/upload" element={<Upload />} />

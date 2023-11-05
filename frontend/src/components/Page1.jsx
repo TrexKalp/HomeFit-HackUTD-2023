@@ -24,7 +24,7 @@ import {
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-export default function Page1() {
+export default function Page1(props) {
   // Adjusted state variables to match the server's expected format and added estMonthlyMortgagePayment
   const [grossMonthlyIncome, setGrossMonthlyIncome] = useState("");
   const [creditScore, setCreditScore] = useState("");
@@ -41,7 +41,6 @@ export default function Page1() {
   const [alerts, setAlerts] = useState([]);
   const [advice, setAdvice] = useState(""); // State to store the user advice
   const [isLoading, setIsLoading] = useState(false);
-
   const getFinancialAdvice = async (prompt) => {
     setIsLoading(true);
     try {
@@ -133,10 +132,11 @@ export default function Page1() {
       }
 
       const data = await response.json();
-
       if (data.approved === "Yes") {
         addAlert("success", "Congratulations! You are eligible to buy a home.");
       } else {
+        // eslint-disable-next-line react/prop-types
+        props.setproblemFields(data.problemfields)
         const suggestionsMessage =
           data.suggestions.length > 0
             ? `Suggestions: ${data.suggestions.join(", ")}`
@@ -146,7 +146,6 @@ export default function Page1() {
         let prompt = `I have issues with ${data.problemfields.join(
           ", "
         )}. Please tell me how I can fix these issues. Limit reponse to 130 words`;
-        console.log(prompt);
         await getFinancialAdvice(prompt);
       }
     } catch (error) {
@@ -326,8 +325,10 @@ export default function Page1() {
                 Check Eligibility
               </Button>
             </Stack>
+            {isLoading?}
           </Stack>
         </Box>
+
       </Stack>
       {isLoading ? (
         <Spinner size="xl" mr={10} />

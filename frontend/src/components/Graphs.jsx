@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   LineChart,
+  BarChart, Bar,
   Line,
   XAxis,
   YAxis,
@@ -17,9 +18,9 @@ import { Flex, Heading } from "@chakra-ui/react";
 
 const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042"]; // Colors for the lines
 
-const DebtGraph = () => {
+const DebtGraph = (props) => {
   const [data, setData] = useState([]);
-
+console.log(props)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -34,6 +35,7 @@ const DebtGraph = () => {
             return acc;
           }, {})
         );
+        console.log(parsedData)
         setData(parsedData);
       } catch (error) {
         console.error("Error fetching CSV data:", error);
