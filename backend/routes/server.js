@@ -103,29 +103,32 @@ app.post("/api/process-batch", upload.single("file"), (req, res) => {
     });
 });
 
-// Append eligibility check data to CSV
-app.post("/api/save-eligibility-check", (req, res) => {
-  const { grossMonthlyIncome, creditScore, ...rest } = req.body;
-  const csvStream = fastCsv.format({
-    headers: true,
-    includeEndRowDelimiter: true,
-  });
+const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 
-  fs.createReadStream(csvFilePath)
-    .on("error", () => {
-      // Handle file not existing, create the file and write headers
-      csvStream
-        .pipe(fs.createWriteStream(csvFilePath, { flags: "a" }))
-        .on("finish", () => res.status(200).send("Eligibility check saved."));
-    })
-    .pipe(csvStream)
-    .pipe(fs.createWriteStream(csvFilePath, { flags: "a" })); // Append mode
-
-  csvStream.write({ grossMonthlyIncome, creditScore, ...rest });
-  csvStream.end();
+// Define the CSV Writer with path and headers
+const csvWriter = createCsvWriter({
+  path: "eligibility_data.csv",
+  header: [
+    { id: "grossMonthlyIncome", title: "GROSS_MONTHLY_INCOME" },
+    { id: "monthlyCarPayment", title: "MONTHLY_CAR_PAYMENT" },
+    { id: "monthlyCreditCardPayment", title: "MONTHLY_CREDIT_CARD_PAYMENT" },
+    { id: "studentLoanPayment", title: "STUDENT_LOAN_PAYMENT" },
+    { id: "homeAppraisedValue", title: "HOME_APPRAISED_VALUE" },
+    { id: "estMonthlyMortgagePayment", title: "EST_MONTHLY_MORTGAGE_PAYMENT" },
+    { id: "downPaymentAmount", title: "DOWN_PAYMENT_AMOUNT" },
+    { id: "creditScore", title: "CREDIT_SCORE" },
+    { id: "approved", title: "APPROVED" },
+    { id: "PMI", title: "PMI" },
+  ],
 });
 
-app.post("/api/check-eligibility", (req, res) => {
+// Track the number of approved and not approved applications
+let approvalStatistics = {
+  approvedCount: 0,
+  notApprovedCount: 0,
+};
+
+app.post("/api/check-eligibility", async (req, res) => {
   const {
     grossMonthlyIncome,
     monthlyCarPayment,
@@ -180,11 +183,67 @@ app.post("/api/check-eligibility", (req, res) => {
     if (FEDTI > 28) suggestions.push("Look for a less expensive home.");
   }
 
-  res.json({
+  // Now, increment counters based on the approval status
+  if (approved) {
+    approvalStatistics.approvedCount++;
+  } else {
+    approvalStatistics.notApprovedCount++;
+  }
+
+  // Prepare data for the CSV file
+  const csvData = {
+    grossMonthlyIncome: grossMonthlyIncome,
+    monthlyCarPayment: monthlyCarPayment,
+    monthlyCreditCardPayment: monthlyCreditCardPayment,
+    studentLoanPayment: studentLoanPayment,
+    homeAppraisedValue: homeAppraisedValue,
+    estMonthlyMortgagePayment: estMonthlyMortgagePayment,
+    downPaymentAmount: downPaymentAmount,
+    creditScore: creditScore,
     approved: approved ? "Yes" : "No",
-    PMI: PMI ? `Required - $${PMI.toFixed(2)} per month` : "Not Required",
-    suggestions,
-  });
+    PMI: PMI ? PMI.toFixed(2) : "0.00",
+  };
+
+  try {
+    // Write the applicant's data to the CSV file
+    await csvWriter.writeRecords([csvData]);
+
+    // Respond with approval results and current statistics for approvals
+    res.json({
+      approved: approved ? "Yes" : "No",
+      PMI: PMI ? `Required - $${PMI.toFixed(2)} per month` : "Not Required",
+      suggestions: suggestions,
+      statistics: approvalStatistics,
+    });
+  } catch (error) {
+    // If an error occurs, send a 500 server error response
+    res.status(500).json({
+      message: "Error writing to CSV",
+      error: error.message,
+    });
+  }
+});
+
+app.get("/api/approval-counts", (req, res) => {
+  let approvedCount = 0;
+  let notApprovedCount = 0;
+
+  fs.createReadStream("eligibility_data.csv")
+    .pipe(fastCsv.parse({ headers: true }))
+    .on("data", (row) => {
+      if (row.APPROVED === "Yes") {
+        approvedCount++;
+      } else {
+        notApprovedCount++;
+      }
+    })
+    .on("end", () => {
+      res.json({ approved: approvedCount, notApproved: notApprovedCount });
+    })
+    .on("error", (error) => {
+      console.error("Error reading the CSV file:", error);
+      res.status(500).send("Error reading the CSV file");
+    });
 });
 
 const PORT = process.env.PORT || 3001;

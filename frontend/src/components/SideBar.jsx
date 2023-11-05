@@ -213,7 +213,7 @@ const SidebarWithHeader = () => {
       <Box ml={{ base: 0, md: 60 }} p="4">
         <Page1 />
         <Upload />
-        <Graphs />
+        {/* <Graphs /> */}
       </Box>
     </Box>
   );
