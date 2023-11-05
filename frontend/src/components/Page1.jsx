@@ -79,7 +79,7 @@ export default function Page1(props) {
 
       // Save to localStorage
       localStorage.setItem("alerts", JSON.stringify(updatedAlerts));
-      console.log(updatedAlerts)
+  
       return updatedAlerts;
     });
   };

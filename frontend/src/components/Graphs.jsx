@@ -32,9 +32,9 @@ import ApprovedTips from "./ApprovedTips";
 
 const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042"]; // Colors for the lines
 
-const DebtGraph = (props) => {
+const DebtGraph = () => {
   const [data, setData] = useState([]);
-console.log(props)
+
   useEffect(() => {
     const fetchData = async () => {
       try {
