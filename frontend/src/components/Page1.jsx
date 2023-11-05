@@ -18,10 +18,11 @@ import {
   AlertTitle,
   AlertDescription,
   CloseButton,
+  Spinner,
 } from "@chakra-ui/react";
 
-import { useState } from "react";
-import axios from 'axios'
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 export default function Page1() {
   // Adjusted state variables to match the server's expected format and added estMonthlyMortgagePayment
@@ -39,35 +40,24 @@ export default function Page1() {
   const [isAlertVisible, setIsAlertVisible] = useState(false);
   const [alerts, setAlerts] = useState([]);
   const [advice, setAdvice] = useState(""); // State to store the user advice
-
-  // async function getFinancialAdvice(financialSituation) {
-  //   try {
-  //     const response = await fetch("/api/suggestions", {
-  //       method: "GET",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       params: financialSituation,
-  //     });
-  //     const data = await response.json();
-  //     //setAdvice(data.response); // Update state with the advice from ChatGPT
-  //     addAlert("Advice", `${data}`);
-  //   } catch (error) {
-  //     console.error("Error fetching financial advice:", error);
-  //   }
-
-  // }
+  const [isLoading, setIsLoading] = useState(false);
 
   const getFinancialAdvice = async (prompt) => {
+    setIsLoading(true);
     try {
-      const response = await axios.get("http://localhost:3001/api/suggestions", {
-        params: {
-          prompt: prompt,
-        },
-      });
+      const response = await axios.get(
+        "http://localhost:3001/api/suggestions",
+        {
+          params: {
+            prompt: prompt,
+          },
+        }
+      );
       addAlert("info", `${response.data.response}`);
     } catch (error) {
       console.error("Error fetching suggestions:", error);
+    } finally {
+      setIsLoading(false); // Stop loading regardless of outcome
     }
   };
 
@@ -75,15 +65,24 @@ export default function Page1() {
   // Function to add a new alert to the stack, removing the first one if the max is reached
   const addAlert = (status, message) => {
     setAlerts((currentAlerts) => {
-      // If adding the new alert would exceed the max, remove the oldest one
-      if (currentAlerts.length >= 5) {
-        // Remove the first item
-        currentAlerts.shift();
-      }
-      // Add the new alert
-      return [...currentAlerts, { status, message }];
+      const updatedAlerts =
+        currentAlerts.length >= 2
+          ? [...currentAlerts.slice(1), { status, message }]
+          : [...currentAlerts, { status, message }];
+
+      // Save to localStorage
+      localStorage.setItem("alerts", JSON.stringify(updatedAlerts));
+      return updatedAlerts;
     });
   };
+
+  useEffect(() => {
+    // Load saved alerts from localStorage when the component mounts
+    const savedAlerts = localStorage.getItem("alerts");
+    if (savedAlerts) {
+      setAlerts(JSON.parse(savedAlerts));
+    }
+  }, []);
 
   // Function to remove an alert from the stack
   const removeAlert = (index) => {
@@ -142,11 +141,13 @@ export default function Page1() {
           data.suggestions.length > 0
             ? `Suggestions: ${data.suggestions.join(", ")}`
             : "No suggestions available.";
-        addAlert("info", `Eligibility Check: No. \n ${suggestionsMessage}`);
-        
-        let prompt = `I have issues with ${data.problemfields.join(", ")}. Please tell me how I can fix these issues`
-        console.log(prompt)
-        await getFinancialAdvice(prompt)
+        addAlert("info", `Eligibility Check: Failed. \n ${suggestionsMessage}`);
+
+        let prompt = `I have issues with ${data.problemfields.join(
+          ", "
+        )}. Please tell me how I can fix these issues. Limit reponse to 130 words`;
+        console.log(prompt);
+        await getFinancialAdvice(prompt);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -328,53 +329,44 @@ export default function Page1() {
           </Stack>
         </Box>
       </Stack>
-      <Flex
-        direction="column"
-        width={{ base: "100%", md: "auto" }}
-        // ml={{ md: 4 }}
-        // mt={{ base: 4, md: 0 }}
-        // position="fixed" // Fixed position to stack on the right
-        right="10px" // Right-aligned
-        top="10px" // Starting from the top
-        maxW={"450px"} // Take up the full width on mobile, but only 400px on larger screens
-      >
-        {alerts.map((alert, index) => (
-          <Alert
-            key={index}
-            status={alert.status}
-            borderRadius="md"
-            mb={2} // Margin bottom for spacing between alerts
-            zIndex="overlay" // Ensures it's above other content
-          >
-            <AlertIcon />
-            <Box flex="1">
-              <AlertTitle mr={2}>
-                {alert.status === "error" ? "Error" : "Success"}
-              </AlertTitle>
-              <AlertDescription>{alert.message}</AlertDescription>
-            </Box>
-            <CloseButton
+      {isLoading ? (
+        <Spinner size="xl" mr={10} />
+      ) : (
+        <Flex
+          direction="column"
+          width={{ base: "100%", md: "auto" }}
+          // ml={{ md: 4 }}
+          // mt={{ base: 4, md: 0 }}
+          // position="fixed" // Fixed position to stack on the right
+          right="10px" // Right-aligned
+          top="10px" // Starting from the top
+          maxW={"450px"} // Take up the full width on mobile, but only 400px on larger screens
+        >
+          {alerts.map((alert, index) => (
+            <Alert
+              key={index}
+              status={alert.status}
+              borderRadius="md"
+              mb={2} // Margin bottom for spacing between alerts
+              zIndex="overlay" // Ensures it's above other content
+            >
+              <AlertIcon />
+              <Box flex="1">
+                <AlertTitle mr={2}>
+                  {alert.status === "error" ? "Error" : "Eligibility Check"}
+                </AlertTitle>
+                <AlertDescription>{alert.message}</AlertDescription>
+              </Box>
+              {/* <CloseButton
               position="absolute"
               right="8px"
               top="8px"
               onClick={() => removeAlert(index)}
-            />
-          </Alert>
-        ))}
-        {/* {advice && ( */}
-        <Box
-          m={4}
-          p={4}
-          bg="orange.100"
-          borderWidth="1px"
-          borderColor="orange.200"
-          borderRadius="md"
-          maxW="450px"
-        >
-          {advice}
-        </Box>
-        {/* )} */}
-      </Flex>
+            /> */}
+            </Alert>
+          ))}
+        </Flex>
+      )}
     </Flex>
   );
 }
