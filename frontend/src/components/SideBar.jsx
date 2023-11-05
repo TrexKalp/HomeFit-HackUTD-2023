@@ -28,12 +28,13 @@ import {
 import Page1 from "./Page1";
 import Upload from "./Upload";
 import Graphs from "./Graphs";
+import Download from "./Download";
 
 const LinkItems = [
   { name: "Home", icon: FiHome },
   { name: "Upload", icon: FiTrendingUp },
   { name: "Visualization", icon: FiCompass },
-  { name: "Favourites", icon: FiStar },
+  { name: "Download", icon: FiStar },
   { name: "Settings", icon: FiSettings },
 ];
 
@@ -134,8 +135,8 @@ const SidebarWithHeader = () => {
             <Route exact path="/home" element={<Page1 />} />
             <Route path="/Upload" element={<Upload />} />
             <Route path="/visualization" element={<Graphs />} />
-            {/*<Route path="/favourites" element={<Favourites />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/download" element={<Download />} />
+            {/*<Route path="/settings" element={<Settings />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/graphs" element={<Graphs />} /> */}
           </Routes>

@@ -107,6 +107,24 @@ app.get("/get-csv", (req, res) => {
   });
 });
 
+app.get("/download-csv", (req, res) => {
+  const filePath = path.join(__dirname, "eligibility_data.csv"); // Ensure the file path is correct
+
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.status(500).send("Error reading the CSV file.");
+    } else {
+      // Set headers to prompt the file download
+      res.setHeader(
+        "Content-Disposition",
+        "attachment; filename=eligibility_data.csv"
+      );
+      res.setHeader("Content-Type", "text/csv");
+      res.send(data);
+    }
+  });
+});
+
 // // Function to format the response consistently for both endpoints
 // function formatResponse({ approved, PMI, suggestions }) {
 //   return {

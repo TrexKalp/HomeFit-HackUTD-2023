@@ -151,7 +151,7 @@ const DebtGraph = () => {
                 dataKey="HOME_APPRAISED_VALUE"
                 name="Appraised Value"
                 unit="$"
-                domain={["auto", "auto"]}
+                // domain={["auto", "auto"]}
               >
                 <Label
                   value="Appraised Value ($)"
