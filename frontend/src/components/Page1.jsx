@@ -340,21 +340,19 @@ export default function Page1() {
             />
           </Alert>
         ))}
-        {advice && (
-          <Box
-            position="fixed"
-            top="0"
-            right="0"
-            m={4}
-            p={4}
-            bg="orange.100"
-            borderWidth="1px"
-            borderColor="orange.200"
-            borderRadius="md"
-          >
-            {advice}
-          </Box>
-        )}
+        {/* {advice && ( */}
+        <Box
+          m={4}
+          p={4}
+          bg="orange.100"
+          borderWidth="1px"
+          borderColor="orange.200"
+          borderRadius="md"
+          maxW="450px"
+        >
+          {advice}
+        </Box>
+        {/* )} */}
       </Flex>
     </Flex>
   );
