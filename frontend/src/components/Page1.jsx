@@ -21,6 +21,7 @@ import {
 } from "@chakra-ui/react";
 
 import { useState } from "react";
+import axios from 'axios'
 
 export default function Page1() {
   // Adjusted state variables to match the server's expected format and added estMonthlyMortgagePayment
@@ -39,21 +40,37 @@ export default function Page1() {
   const [alerts, setAlerts] = useState([]);
   const [advice, setAdvice] = useState(""); // State to store the user advice
 
-  async function getFinancialAdvice(financialSituation) {
+  // async function getFinancialAdvice(financialSituation) {
+  //   try {
+  //     const response = await fetch("/api/suggestions", {
+  //       method: "GET",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //       params: financialSituation,
+  //     });
+  //     const data = await response.json();
+  //     //setAdvice(data.response); // Update state with the advice from ChatGPT
+  //     addAlert("Advice", `${data}`);
+  //   } catch (error) {
+  //     console.error("Error fetching financial advice:", error);
+  //   }
+
+  // }
+
+  const getFinancialAdvice = async (prompt) => {
     try {
-      const response = await fetch("/api/suggestions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await axios.get("http://localhost:3001/api/suggestions", {
+        params: {
+          prompt: prompt,
         },
-        body: JSON.stringify({ prompt: financialSituation }),
       });
-      const data = await response.json();
-      setAdvice(data.response); // Update state with the advice from ChatGPT
+      addAlert("info", `${response.data.response}`);
     } catch (error) {
-      console.error("Error fetching financial advice:", error);
+      console.error("Error fetching suggestions:", error);
     }
-  }
+  };
+
   // Function to add a new alert to the stack
   // Function to add a new alert to the stack, removing the first one if the max is reached
   const addAlert = (status, message) => {
@@ -125,7 +142,11 @@ export default function Page1() {
           data.suggestions.length > 0
             ? `Suggestions: ${data.suggestions.join(", ")}`
             : "No suggestions available.";
-        addAlert("info", `Eligibility Check: No\n${suggestionsMessage}`);
+        addAlert("info", `Eligibility Check: No. \n ${suggestionsMessage}`);
+        
+        let prompt = `I have issues with ${data.problemfields.join(", ")}. Please tell me how I can fix these issues`
+        console.log(prompt)
+        await getFinancialAdvice(prompt)
       }
     } catch (error) {
       console.error("Error fetching data:", error);
