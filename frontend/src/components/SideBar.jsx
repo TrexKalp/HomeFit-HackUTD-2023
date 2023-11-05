@@ -52,7 +52,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
     >
       <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
         <Text fontSize="2xl" fontFamily="monospace" fontWeight="bold">
-          Logo
+        HomeFit
         </Text>
         <IconButton
           display={{ base: "flex", md: "none" }}
@@ -109,7 +109,7 @@ const NavItem = ({ icon, children, ...rest }) => {
 
 const SidebarWithHeader = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [problemFields,setproblemFields]=useState([])
+
   return (
     <Router>
       <Box minH="100vh" bg={useColorModeValue("gray.100", "gray.900")}>
@@ -132,7 +132,7 @@ const SidebarWithHeader = () => {
         <Box ml={{ base: 0, md: 60 }} p="4">
           <Routes>
             <Route exact path="/" element={<Page1 />} />
-            <Route exact path="/home" element={<Page1 setproblemFields={setproblemFields} />} />
+            <Route exact path="/home" element={<Page1  />} />
             <Route path="/Upload" element={<Upload />} />
             <Route path="/visualization" element={<Graphs />} />
             <Route path="/download" element={<Download />} />

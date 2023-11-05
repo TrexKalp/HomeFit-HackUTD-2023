@@ -5,7 +5,9 @@ import {
   FormLabel,
   NumberInput,
   NumberInputField,
+  Text,
   Stack,
+  Link,
   Button,
   Heading,
   useColorModeValue,
@@ -20,7 +22,7 @@ import {
   CloseButton,
   Spinner,
 } from "@chakra-ui/react";
-
+import { ExternalLinkIcon } from '@chakra-ui/icons'
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Visual from "./VisualButton";
@@ -54,6 +56,7 @@ export default function Page1(props) {
         }
       );
       addAlert("info", `${response.data.response}`);
+
     } catch (error) {
       console.error("Error fetching suggestions:", error);
     } finally {
@@ -64,14 +67,19 @@ export default function Page1(props) {
   // Function to add a new alert to the stack
   // Function to add a new alert to the stack, removing the first one if the max is reached
   const addAlert = (status, message) => {
+    const sentences = message.match(/[^.!?]+[.!?]+/g);
+  const index = sentences.findIndex((sentence) => sentence.includes("https"));
+  const links=message.match(/https:\/\/\S+/g);
+  const textBeforeLinks = sentences.slice(0, index).join("").trim();
     setAlerts((currentAlerts) => {
       const updatedAlerts =
         currentAlerts.length >= 2
-          ? [...currentAlerts.slice(1), { status, message }]
-          : [...currentAlerts, { status, message }];
+          ? [...currentAlerts.slice(1), { status, textBeforeLinks,links }]
+          : [...currentAlerts, { status, textBeforeLinks,links}];
 
       // Save to localStorage
       localStorage.setItem("alerts", JSON.stringify(updatedAlerts));
+      console.log(updatedAlerts)
       return updatedAlerts;
     });
   };
@@ -137,7 +145,7 @@ export default function Page1(props) {
         addAlert("success", "Congratulations! You are eligible to buy a home.");
       } else {
         // eslint-disable-next-line react/prop-types
-        props.setproblemFields(data.problemfields)
+   
         const suggestionsMessage =
           data.suggestions.length > 0
             ? `Suggestions: ${data.suggestions.join(", ")}`
@@ -357,7 +365,19 @@ export default function Page1(props) {
                 <AlertTitle mr={2}>
                   {alert.status === "error" ? "Error" : "Eligibility Check"}
                 </AlertTitle>
-                <AlertDescription>{alert.message}</AlertDescription>
+                <AlertDescription>{alert.textBeforeLinks}</AlertDescription>
+                {alert.links != null && (
+        <Box>
+          <Text fontWeight="bold" color="blue.500">Links</Text>
+          {alert.links.map((link, key) => (
+            <Text key={key} color="blue.500">
+              <Link href={link} isExternal>
+                {link}
+              </Link>
+            </Text>
+          ))}
+        </Box>
+      )}
               </Box>
               {/* <CloseButton
               position="absolute"
@@ -367,6 +387,10 @@ export default function Page1(props) {
             /> */}
             </Alert>
           ))}
+     
+       
+   
+          
           <Visual />
         </Flex>
       )}
