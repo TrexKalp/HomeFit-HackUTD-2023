@@ -14,7 +14,21 @@ import {
   Scatter,
   Label,
 } from "recharts";
-import { Flex, Heading } from "@chakra-ui/react";
+import {
+  Flex,
+  Box,
+  Heading,
+  Text,
+  List,
+  ListItem,
+  ListIcon,
+  Card,
+} from "@chakra-ui/react";
+import { MdCheckCircle } from "react-icons/md";
+import { DebtTips } from "./DebtTips";
+import { DownAppraisal } from "./DownAppraisal";
+import ApprovalPieChart from "./PieChart";
+import ApprovedTips from "./ApprovedTips";
 
 const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042"]; // Colors for the lines
 
@@ -62,7 +76,7 @@ console.log(props)
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
-            <YAxis />
+            <YAxis domain={[0, 10000]} />
             <Tooltip />
             <Legend />
             <Line
@@ -89,7 +103,8 @@ console.log(props)
           </LineChart>
         </ResponsiveContainer>
       </Flex>
-      <Heading as="h2" size="lg" my={4}>
+      <DebtTips />
+      {/* <Heading as="h2" size="lg" my={4}>
         Down Payment vs Appraised Value
       </Heading>
       <Flex style={{ width: "100%", height: 300 }}>
@@ -132,7 +147,7 @@ console.log(props)
             <Scatter name="Down Payments" data={data} fill="#8884d8" />
           </ScatterChart>
         </ResponsiveContainer>
-      </Flex>
+      </Flex> */}
       <Heading as="h2" size="lg" my={4}>
         Down Payment vs Appraised Value
       </Heading>
@@ -153,7 +168,7 @@ console.log(props)
                 dataKey="HOME_APPRAISED_VALUE"
                 name="Appraised Value"
                 unit="$"
-                domain={["auto", "auto"]}
+                // domain={["auto", "auto"]}
               >
                 <Label
                   value="Appraised Value ($)"
@@ -195,6 +210,12 @@ console.log(props)
           </ResponsiveContainer>
         </Flex>
       </Flex>
+      <DownAppraisal />
+      <Heading as="h2" size="lg" mb={4} mt={5}>
+        Requests Approved
+      </Heading>
+      <ApprovalPieChart />
+      <ApprovedTips />
     </>
   );
 };

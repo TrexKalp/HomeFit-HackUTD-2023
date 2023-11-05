@@ -23,6 +23,7 @@ import {
 
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Visual from "./VisualButton";
 
 export default function Page1(props) {
   // Adjusted state variables to match the server's expected format and added estMonthlyMortgagePayment
@@ -145,7 +146,7 @@ export default function Page1(props) {
 
         let prompt = `I have issues with ${data.problemfields.join(
           ", "
-        )}. Please tell me how I can fix these issues. Limit reponse to 130 words`;
+        )}. Please tell me how I can fix these issues and provide links. Limit reponse to 130 words`;
         await getFinancialAdvice(prompt);
       }
     } catch (error) {
@@ -325,7 +326,7 @@ export default function Page1(props) {
                 Check Eligibility
               </Button>
             </Stack>
-            {isLoading?}
+        
           </Stack>
         </Box>
 
@@ -366,6 +367,7 @@ export default function Page1(props) {
             /> */}
             </Alert>
           ))}
+          <Visual />
         </Flex>
       )}
     </Flex>
