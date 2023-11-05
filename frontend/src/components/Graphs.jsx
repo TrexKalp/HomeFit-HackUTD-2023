@@ -37,12 +37,7 @@ const Graphs = () => {
       });
   }, []);
 
-  return (
-    <div>
-      <h2>Approval Pie Chart</h2>
-      <Pie data={chartData} />
-    </div>
-  );
+  return <h2>Approval Pie Chart</h2>;
 };
 
 export default Graphs;
