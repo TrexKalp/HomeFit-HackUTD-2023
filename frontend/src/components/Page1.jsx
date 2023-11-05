@@ -23,6 +23,7 @@ import {
 
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Visual from "./VisualButton";
 
 export default function Page1() {
   // Adjusted state variables to match the server's expected format and added estMonthlyMortgagePayment
@@ -365,6 +366,7 @@ export default function Page1() {
             /> */}
             </Alert>
           ))}
+          <Visual />
         </Flex>
       )}
     </Flex>
