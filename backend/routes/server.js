@@ -37,8 +37,7 @@ const getFieldData = async (fields) => {
   for (let i = 0; i < fields.length; i++) {
     projection[fields[i]] = 1;
   }
-  const data = await CustomerData.find({}, projection);
-  console.log(data);
+  const data = await CustomerData.find({},projection)
   return data;
 };
 
@@ -146,7 +145,6 @@ const getGPTPrompts = async (prompt) => {
     ],
   });
   const resp1 = completion.data.choices[0].message.content;
-  console.log(resp1);
   return resp1;
 };
 
@@ -245,7 +243,6 @@ app.post("/api/check-eligibility", async (req, res) => {
   const DTI = (monthlyDebtPayments / income) * 100;
   const FEDTI = (mortgagePayment / income) * 100;
 
-  console.log({ LTV, DTI, FEDTI, score });
 
   let approved = score >= 640 && LTV < 95 && DTI < 43 && FEDTI <= 28;
   let PMI = null;
@@ -276,15 +273,16 @@ app.post("/api/check-eligibility", async (req, res) => {
     fields.push("DTI");
     if (FEDTI > 28) suggestions.push("Look for a less expensive home.");
     fields.push("FEDTI");
+    
   }
-  // let filteredData = null;
-  // // Now, increment counters based on the approval status
-  // if (approved) {
-  //   approvalStatistics.approvedCount++;
-  // } else {
-  //   approvalStatistics.notApprovedCount++;
-  //   filteredData = await getFieldData(fields);
-  // }
+  let filteredData = null;
+  // Now, increment counters based on the approval status
+  if (approved) {
+    approvalStatistics.approvedCount++;
+  } else {
+    approvalStatistics.notApprovedCount++;
+    filteredData = await getFieldData(fields);
+  }
 
   // Prepare data for the CSV file
   const csvData = {

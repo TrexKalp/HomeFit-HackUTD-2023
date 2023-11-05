@@ -5,7 +5,9 @@ import {
   FormLabel,
   NumberInput,
   NumberInputField,
+  Text,
   Stack,
+  Link,
   Button,
   Heading,
   useColorModeValue,
@@ -20,12 +22,12 @@ import {
   CloseButton,
   Spinner,
 } from "@chakra-ui/react";
-
+import { ExternalLinkIcon } from "@chakra-ui/icons";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Visual from "./VisualButton";
 
-export default function Page1() {
+export default function Page1(props) {
   // Adjusted state variables to match the server's expected format and added estMonthlyMortgagePayment
   const [grossMonthlyIncome, setGrossMonthlyIncome] = useState("");
   const [creditScore, setCreditScore] = useState("");
@@ -42,7 +44,6 @@ export default function Page1() {
   const [alerts, setAlerts] = useState([]);
   const [advice, setAdvice] = useState(""); // State to store the user advice
   const [isLoading, setIsLoading] = useState(false);
-
   const getFinancialAdvice = async (prompt) => {
     setIsLoading(true);
     try {
@@ -65,14 +66,19 @@ export default function Page1() {
   // Function to add a new alert to the stack
   // Function to add a new alert to the stack, removing the first one if the max is reached
   const addAlert = (status, message) => {
+    const sentences = message.match(/[^.!?]+[.!?]+/g);
+    const index = sentences.findIndex((sentence) => sentence.includes("https"));
+    const links = message.match(/https:\/\/\S+/g);
+    const textBeforeLinks = sentences.slice(0, index).join("").trim();
     setAlerts((currentAlerts) => {
       const updatedAlerts =
         currentAlerts.length >= 2
-          ? [...currentAlerts.slice(1), { status, message }]
-          : [...currentAlerts, { status, message }];
+          ? [...currentAlerts.slice(1), { status, textBeforeLinks, links }]
+          : [...currentAlerts, { status, textBeforeLinks, links }];
 
       // Save to localStorage
       localStorage.setItem("alerts", JSON.stringify(updatedAlerts));
+
       return updatedAlerts;
     });
   };
@@ -134,10 +140,11 @@ export default function Page1() {
       }
 
       const data = await response.json();
-
       if (data.approved === "Yes") {
         addAlert("success", "Congratulations! You are eligible to buy a home.");
       } else {
+        // eslint-disable-next-line react/prop-types
+
         const suggestionsMessage =
           data.suggestions.length > 0
             ? `Suggestions: ${data.suggestions.join(", ")}`
@@ -146,8 +153,7 @@ export default function Page1() {
 
         let prompt = `I have issues with ${data.problemfields.join(
           ", "
-        )}. Please tell me how I can fix these issues. Limit reponse to 125 words`;
-        console.log(prompt);
+        )}. Please tell me how I can fix these issues and provide links. Limit reponse to 130 words`;
         await getFinancialAdvice(prompt);
       }
     } catch (error) {
@@ -356,7 +362,21 @@ export default function Page1() {
                 <AlertTitle mr={2}>
                   {alert.status === "error" ? "Error" : "Eligibility Check"}
                 </AlertTitle>
-                <AlertDescription>{alert.message}</AlertDescription>
+                <AlertDescription>{alert.textBeforeLinks}</AlertDescription>
+                {alert.links != null && (
+                  <Box>
+                    <Text fontWeight="bold" color="blue.500">
+                      Links
+                    </Text>
+                    {alert.links.map((link, key) => (
+                      <Text key={key} color="blue.500">
+                        <Link href={link} isExternal>
+                          {link}
+                        </Link>
+                      </Text>
+                    ))}
+                  </Box>
+                )}
               </Box>
               {/* <CloseButton
               position="absolute"
@@ -366,6 +386,7 @@ export default function Page1() {
             /> */}
             </Alert>
           ))}
+
           <Visual />
         </Flex>
       )}
