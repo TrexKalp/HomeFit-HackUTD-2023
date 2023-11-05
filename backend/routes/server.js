@@ -1,4 +1,5 @@
 const express = require("express");
+// import express from "express";
 const cors = require("cors");
 const multer = require("multer");
 const fastCsv = require("fast-csv");
@@ -7,6 +8,9 @@ const app = express();
 const upload = multer({ dest: "uploads/" });
 const mongoose = require("mongoose");
 const path = require("path");
+const CustomerData = require("../modals/LoanDataModel.js");
+const { Configuration, OpenAIApi } = require("openai");
+require("dotenv").config();
 
 // Database connection parameters
 const connectionParams = {
@@ -14,18 +18,34 @@ const connectionParams = {
   useUnifiedTopology: true,
 };
 
-// Replace with your actual MongoDB connection string
-// const url = `your_mongodb_connection_string`;
+const configuration = new Configuration({
+  apiKey: "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",
+});
 
-// mongoose
-//   .connect(url, connectionParams)
-//   .then(() => console.log("Connected to the database"))
-//   .catch((err) => console.error(`Error connecting to the database.\n${err}`));
+const openai = new OpenAIApi(configuration);
+
+// Replace with your actual MongoDB connection string
+const url = `mongodb+srv://root:rootroot@eag.z6jqmoe.mongodb.net/train_data?retryWrites=true&w=majority`;
+
+mongoose
+  .connect(url, connectionParams)
+  .then(() => console.log("Connected to the database"))
+  .catch((err) => console.error(`Error connecting to the database.\n${err}`));
+
+const getFieldData = async (fields) => {
+  const projection = {};
+  for (let i = 0; i < fields.length; i++) {
+    projection[fields[i]] = 1;
+  }
+  const data = await CustomerData.find({}, projection);
+  console.log(data);
+  return data;
+};
 
 app.use(cors());
 app.use(express.json());
 // Function to check eligibility, extracted from your existing logic
-function checkEligibility(data) {
+async function checkEligibility(data) {
   const income = parseFloat(data.GrossMonthlyIncome);
   const carPayment = parseFloat(data.CarPayment);
   const creditCardPayment = parseFloat(data.CreditCardPayment);
@@ -37,7 +57,7 @@ function checkEligibility(data) {
   const score = parseInt(data.CreditScore, 10);
 
   // Your existing calculations (adjusted if necessary for consistency with your requirements)
-  const LTV = (loanAmount / appraisedValue) * 100;
+  const LTV = (appraisedValue - downPayment / appraisedValue) * 100;
   const monthlyDebtPayments =
     carPayment + creditCardPayment + studentPayment + mortgagePayment;
   const DTI = (monthlyDebtPayments / income) * 100;
@@ -46,15 +66,26 @@ function checkEligibility(data) {
   let approved = score >= 640 && LTV <= 95 && DTI <= 43 && FEDTI <= 28;
   let PMI = null;
   let suggestions = [];
+  let fields = [];
 
   if (LTV > 80) {
     PMI = (loanAmount * 0.01) / 12;
     suggestions.push("Consider the additional cost of PMI.");
+    fields.push("LTV");
   }
 
-  if (score < 640) suggestions.push("Improve your credit score.");
-  if (DTI >= 43) suggestions.push("Reduce your debt.");
-  if (FEDTI > 28) suggestions.push("Look for a less expensive home.");
+  if (score < 640) {
+    suggestions.push("Improve your credit score.");
+    fields.push("CreditScore");
+  }
+  if (DTI >= 43) {
+    suggestions.push("Reduce your debt.");
+    fields.push("DTI");
+  }
+  if (FEDTI > 28) {
+    suggestions.push("Look for a less expensive home.");
+    fields.push("FEDTI");
+  }
 
   return {
     approved,
@@ -86,7 +117,22 @@ app.get("/get-csv", (req, res) => {
 //   };
 // }
 
-app.post("/api/process-batch", upload.single("file"), (req, res) => {
+const getGPTPrompts = async (prompt) => {
+  const completion = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo",
+    messages: [
+      {
+        role: "system",
+        content: prompt,
+      },
+    ],
+  });
+  const resp1 = completion.data.choices[0].message.content;
+  console.log(resp1);
+  return resp1;
+};
+
+app.post("/api/process-batch", upload.single("file"), async (req, res) => {
   if (!req.file) {
     return res.status(400).send("No file uploaded.");
   }
@@ -176,15 +222,20 @@ app.post("/api/check-eligibility", async (req, res) => {
   let approved = score >= 640 && LTV < 95 && DTI < 43 && FEDTI <= 28;
   let PMI = null;
   let suggestions = [];
+  let fields = [];
 
   if (LTV >= 80 && LTV < 95) {
     PMI = (loanAmount * 0.01) / 12; // PMI calculation
   }
 
   if (!approved) {
-    if (score < 640) suggestions.push("Improve your credit score.");
+    if (score < 640) {
+      suggestions.push("Improve your credit score.");
+      fields.push("score");
+    }
     if (LTV >= 80) {
       suggestions.push("Increase your down payment amount.");
+      fields.push("LTV");
       if (PMI) {
         suggestions.push(
           `Consider the additional cost of Private Mortgage Insurance (PMI): $${PMI.toFixed(
@@ -194,14 +245,17 @@ app.post("/api/check-eligibility", async (req, res) => {
       }
     }
     if (DTI >= 43) suggestions.push("Pay off some current debt.");
+    fields.push("DTI");
     if (FEDTI > 28) suggestions.push("Look for a less expensive home.");
+    fields.push("FEDTI");
   }
-
+  let filteredData = null;
   // Now, increment counters based on the approval status
   if (approved) {
     approvalStatistics.approvedCount++;
   } else {
     approvalStatistics.notApprovedCount++;
+    filteredData = await getFieldData(fields);
   }
 
   // Prepare data for the CSV file
@@ -225,9 +279,10 @@ app.post("/api/check-eligibility", async (req, res) => {
     // Respond with approval results and current statistics for approvals
     res.json({
       approved: approved ? "Yes" : "No",
-      // PMI: PMI ? `Required - $${PMI.toFixed(2)} per month` : "Not Required",
-      // suggestions: suggestions,
-      // statistics: approvalStatistics,
+      PMI: PMI ? `Required - $${PMI.toFixed(2)} per month` : "Not Required",
+      suggestions: suggestions,
+      statistics: approvalStatistics,
+      fields: filteredData,
     });
   } catch (error) {
     // If an error occurs, send a 500 server error response
@@ -258,6 +313,14 @@ app.get("/api/approval-counts", (req, res) => {
       console.error("Error reading the CSV file:", error);
       res.status(500).send("Error reading the CSV file");
     });
+});
+
+app.get("/api/suggestions", async (req, res) => {
+  const prompt = req.body.prompt;
+  const responses = await getGPTPrompts(prompt);
+  res.json({
+    response: responses,
+  });
 });
 
 const PORT = process.env.PORT || 3001;
