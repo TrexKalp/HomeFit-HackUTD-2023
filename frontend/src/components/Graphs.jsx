@@ -13,7 +13,19 @@ import {
   Scatter,
   Label,
 } from "recharts";
-import { Flex, Heading } from "@chakra-ui/react";
+import {
+  Flex,
+  Box,
+  Heading,
+  Text,
+  List,
+  ListItem,
+  ListIcon,
+  Card,
+} from "@chakra-ui/react";
+import { MdCheckCircle } from "react-icons/md";
+import { DebtTips } from "./DebtTips";
+import { DownAppraisal } from "./DownAppraisal";
 
 const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042"]; // Colors for the lines
 
@@ -60,7 +72,7 @@ const DebtGraph = () => {
           >
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
-            <YAxis />
+            <YAxis domain={[0, 10000]} />
             <Tooltip />
             <Legend />
             <Line
@@ -87,7 +99,8 @@ const DebtGraph = () => {
           </LineChart>
         </ResponsiveContainer>
       </Flex>
-      <Heading as="h2" size="lg" my={4}>
+      <DebtTips />
+      {/* <Heading as="h2" size="lg" my={4}>
         Down Payment vs Appraised Value
       </Heading>
       <Flex style={{ width: "100%", height: 300 }}>
@@ -130,7 +143,7 @@ const DebtGraph = () => {
             <Scatter name="Down Payments" data={data} fill="#8884d8" />
           </ScatterChart>
         </ResponsiveContainer>
-      </Flex>
+      </Flex> */}
       <Heading as="h2" size="lg" my={4}>
         Down Payment vs Appraised Value
       </Heading>
@@ -193,6 +206,7 @@ const DebtGraph = () => {
           </ResponsiveContainer>
         </Flex>
       </Flex>
+      <DownAppraisal />
     </>
   );
 };
