@@ -6,7 +6,7 @@ const fastCsv = require("fast-csv");
 const fs = require("fs");
 const app = express();
 const upload = multer({ dest: "uploads/" });
-// const mongoose = require("mongoose");
+const mongoose = require("mongoose");
 const path = require("path");
 const CustomerData = require("../modals/LoanDataModel.js");
 const { Configuration, OpenAIApi } = require("openai");
@@ -24,23 +24,23 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-// Replace with your actual MongoDB connection string
-// const url = `mongodb+srv://root:rootroot@eag.z6jqmoe.mongodb.net/train_data?retryWrites=true&w=majority`;
+//Replace with your actual MongoDB connection string
+const url = `mongodb+srv://root:rootroot@eag.z6jqmoe.mongodb.net/train_data?retryWrites=true&w=majority`;
 
-// mongoose
-//   .connect(url, connectionParams)
-//   .then(() => console.log("Connected to the database"))
-//   .catch((err) => console.error(`Error connecting to the database.\n${err}`));
+mongoose
+  .connect(url, connectionParams)
+  .then(() => console.log("Connected to the database"))
+  .catch((err) => console.error(`Error connecting to the database.\n${err}`));
 
-// const getFieldData = async (fields) => {
-//   const projection = {};
-//   for (let i = 0; i < fields.length; i++) {
-//     projection[fields[i]] = 1;
-//   }
-//   const data = await CustomerData.find({}, projection);
-//   console.log(data);
-//   return data;
-// };
+const getFieldData = async (fields) => {
+  const projection = {};
+  for (let i = 0; i < fields.length; i++) {
+    projection[fields[i]] = 1;
+  }
+  const data = await CustomerData.find({}, projection);
+  console.log(data);
+  return data;
+};
 
 app.use(cors());
 app.use(express.json());
@@ -282,7 +282,7 @@ app.post("/api/check-eligibility", async (req, res) => {
       PMI: PMI ? `Required - $${PMI.toFixed(2)} per month` : "Not Required",
       suggestions: suggestions,
       statistics: approvalStatistics,
-      // fields: filteredData,
+      problemfields: fields,
     });
   } catch (error) {
     // If an error occurs, send a 500 server error response
@@ -316,7 +316,7 @@ app.get("/api/approval-counts", (req, res) => {
 });
 
 app.get("/api/suggestions", async (req, res) => {
-  const prompt = req.body.prompt;
+  const prompt = req.query.prompt;
   const responses = await getGPTPrompts(prompt);
   res.json({
     response: responses,
