@@ -150,7 +150,7 @@ const getGPTPrompts = async (prompt) => {
   return resp1;
 };
 
-app.post("/api/process-batch", upload.single("file"), async (req, res) => {
+app.post("/api/process-batch", upload.single("file"), (req, res) => {
   if (!req.file) {
     return res.status(400).send("No file uploaded.");
   }
@@ -158,13 +158,14 @@ app.post("/api/process-batch", upload.single("file"), async (req, res) => {
   let approvedCounter = 0;
   let declinedCounter = 0;
 
-  const results = [];
+  // Define the path for the new CSV file
+  const newCsvPath = path.join(__dirname, "eligibility_data.csv");
 
+  // Read and process the uploaded CSV file
   fs.createReadStream(req.file.path)
     .pipe(fastCsv.parse({ headers: true }))
     .on("data", (row) => {
       const result = checkEligibility(row);
-      results.push(result);
       if (result.approved) {
         approvedCounter++;
       } else {
@@ -172,8 +173,17 @@ app.post("/api/process-batch", upload.single("file"), async (req, res) => {
       }
     })
     .on("end", () => {
-      fs.unlinkSync(req.file.path); // Make sure to handle errors in production
-      res.json({ approved: approvedCounter, declined: declinedCounter });
+      // Remove the old CSV and replace it with the uploaded one
+      try {
+        if (fs.existsSync(newCsvPath)) {
+          fs.unlinkSync(newCsvPath);
+        }
+        fs.renameSync(req.file.path, newCsvPath);
+        res.json({ approved: approvedCounter, declined: declinedCounter });
+      } catch (error) {
+        console.error("Error replacing the CSV file:", error);
+        res.status(500).send("Error replacing the file");
+      }
     })
     .on("error", (error) => {
       console.error("Error processing the file:", error);

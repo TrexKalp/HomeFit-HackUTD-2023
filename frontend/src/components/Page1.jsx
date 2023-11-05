@@ -146,7 +146,7 @@ export default function Page1() {
 
         let prompt = `I have issues with ${data.problemfields.join(
           ", "
-        )}. Please tell me how I can fix these issues. Limit reponse to 130 words`;
+        )}. Please tell me how I can fix these issues. Limit reponse to 125 words`;
         console.log(prompt);
         await getFinancialAdvice(prompt);
       }

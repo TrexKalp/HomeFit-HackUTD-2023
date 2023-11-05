@@ -1,6 +1,7 @@
 import React from "react";
 import axios from "axios";
-import { Button } from "@chakra-ui/react";
+import { Button, Heading } from "@chakra-ui/react";
+import CsvDataTable from "./CsvDataTable";
 
 const Download = () => {
   const handleDownload = async () => {
@@ -24,12 +25,22 @@ const Download = () => {
   };
 
   return (
-    <Button onClick={handleDownload} colorScheme="blue" style={{
-      marginTop: "15%",
-      marginLeft: "50%"
-    }}>
-      Download CSV
-    </Button>
+    <>
+      <Heading as="h2" size="xl" mb={4}>
+        View and Download Your CSV Data
+      </Heading>
+      <CsvDataTable />
+      <Button
+        onClick={handleDownload}
+        colorScheme="blue"
+        style={{
+          marginTop: "15%",
+          marginLeft: "45%",
+        }}
+      >
+        Download CSV
+      </Button>
+    </>
   );
 };
 

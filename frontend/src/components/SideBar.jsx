@@ -9,6 +9,7 @@ import {
   DrawerContent,
   useDisclosure,
   Icon,
+  Image,
 } from "@chakra-ui/react";
 import {
   FiHome,
@@ -25,6 +26,10 @@ import {
   Link,
 } from "react-router-dom";
 
+import { AiOutlineCloudUpload } from "react-icons/ai";
+import { BsGraphUp } from "react-icons/bs";
+import { AiOutlineDownload } from "react-icons/ai";
+
 import Page1 from "./Page1";
 import Upload from "./Upload";
 import Graphs from "./Graphs";
@@ -32,10 +37,9 @@ import Download from "./Download";
 
 const LinkItems = [
   { name: "Home", icon: FiHome },
-  { name: "Upload", icon: FiTrendingUp },
-  { name: "Visualization", icon: FiCompass },
-  { name: "Download", icon: FiStar },
-  { name: "Settings", icon: FiSettings },
+  { name: "Upload", icon: AiOutlineCloudUpload },
+  { name: "Visualization", icon: BsGraphUp },
+  { name: "Download", icon: AiOutlineDownload },
 ];
 
 const SidebarContent = ({ onClose, ...rest }) => {
@@ -52,7 +56,7 @@ const SidebarContent = ({ onClose, ...rest }) => {
     >
       <Flex h="20" alignItems="center" mx="8" justifyContent="space-between">
         <Text fontSize="2xl" fontFamily="monospace" fontWeight="bold">
-          Logo
+          <Image src="https://i.ibb.co/MGWc1np/homefit.png" alt="HomeFit" />
         </Text>
         <IconButton
           display={{ base: "flex", md: "none" }}

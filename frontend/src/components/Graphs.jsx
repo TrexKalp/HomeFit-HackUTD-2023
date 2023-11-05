@@ -12,6 +12,9 @@ import {
   ScatterChart,
   Scatter,
   Label,
+  Cell,
+  BarChart,
+  Bar,
 } from "recharts";
 import {
   Flex,
@@ -28,6 +31,9 @@ import { DebtTips } from "./DebtTips";
 import { DownAppraisal } from "./DownAppraisal";
 import ApprovalPieChart from "./PieChart";
 import ApprovedTips from "./ApprovedTips";
+import { CreditScoreTips } from "./CreditScoreTips";
+import { LtvTips } from "./LTVDTITips";
+import { DtiTips } from "./LTVDTITips";
 
 const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042"]; // Colors for the lines
 
@@ -42,12 +48,37 @@ const DebtGraph = () => {
         });
         const rows = response.data.split("\n");
         const headers = rows[0].split(",");
-        const parsedData = rows.slice(1).map((row) =>
-          row.split(",").reduce((acc, val, index) => {
-            acc[headers[index]] = val;
+        const parsedData = rows.slice(1).map((row) => {
+          const values = row.split(",");
+          const dataObj = values.reduce((acc, val, index) => {
+            acc[headers[index]] = parseFloat(val) || 0;
             return acc;
-          }, {})
-        );
+          }, {});
+
+          // Calculate DTI - sum of all monthly payments divided by gross monthly income
+          const totalMonthlyDebt =
+            dataObj.MONTHLY_CAR_PAYMENT +
+            dataObj.MONTHLY_CREDIT_CARD_PAYMENT +
+            dataObj.STUDENT_LOAN_PAYMENT;
+          dataObj.DTI =
+            dataObj.GROSS_MONTHLY_INCOME !== 0
+              ? Math.round(
+                  (totalMonthlyDebt / dataObj.GROSS_MONTHLY_INCOME) * 100
+                )
+              : 0;
+
+          // Calculate LTV - mortgage amount divided by home appraised value
+          const mortgageAmount =
+            dataObj.HOME_APPRAISED_VALUE - dataObj.DOWN_PAYMENT_AMOUNT;
+          dataObj.LTV =
+            dataObj.HOME_APPRAISED_VALUE !== 0
+              ? Math.round(
+                  (mortgageAmount / dataObj.HOME_APPRAISED_VALUE) * 100
+                )
+              : 0;
+
+          return dataObj;
+        });
         setData(parsedData);
       } catch (error) {
         console.error("Error fetching CSV data:", error);
@@ -55,10 +86,14 @@ const DebtGraph = () => {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 2000); // Polling every 5 seconds
+    const interval = setInterval(fetchData, 2000); // Polling every 2 seconds
 
     return () => clearInterval(interval);
   }, []);
+
+  const getApprovalColor = (approvalStatus) => {
+    return approvalStatus === "Yes" ? "#00C49F" : "#FF8042";
+  };
 
   return (
     <>
@@ -80,22 +115,26 @@ const DebtGraph = () => {
             <Line
               type="monotone"
               dataKey="MONTHLY_CREDIT_CARD_PAYMENT"
+              name="Credit Card Payment"
               stroke={colors[0]}
               activeDot={{ r: 8 }}
             />
             <Line
               type="monotone"
               dataKey="MONTHLY_CAR_PAYMENT"
+              name="Car Payment"
               stroke={colors[1]}
             />
             <Line
               type="monotone"
               dataKey="STUDENT_LOAN_PAYMENT"
+              name="Student Loan Payment"
               stroke={colors[2]}
             />
             <Line
               type="monotone"
               dataKey="EST_MONTHLY_MORTGAGE_PAYMENT"
+              name="Mortgage Payment"
               stroke={colors[3]}
             />
           </LineChart>
@@ -214,6 +253,82 @@ const DebtGraph = () => {
       </Heading>
       <ApprovalPieChart />
       <ApprovedTips />
+      {/* Heatmap-like ScatterChart Visualization */}
+      <Heading as="h2" size="lg" my={4}>
+        Approval Heatmap by Credit Score and Loan Amount
+      </Heading>
+      <Flex style={{ width: "100%", height: 300 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 50 }}>
+            <CartesianGrid />
+            <XAxis type="number" dataKey="CREDIT_SCORE" name="Credit Score">
+              <Label
+                value="Credit Score"
+                offset={-15}
+                position="insideBottom"
+              />
+            </XAxis>
+            <YAxis
+              type="number"
+              dataKey="DOWN_PAYMENT_AMOUNT"
+              name="Loan Amount"
+              unit="$"
+              domain={["auto", "auto"]}
+            >
+              <Label
+                value="Loan Amount ($)"
+                angle={-90}
+                position="insideLeft"
+                style={{ textAnchor: "middle" }} // This will center the label vertically
+                offset={-40}
+              />
+            </YAxis>
+
+            <Tooltip cursor={{ strokeDasharray: "3 3" }} />
+            <Scatter name="Approvals" data={data} fillOpacity={0.6}>
+              {data.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={getApprovalColor(entry.APPROVED)}
+                />
+              ))}
+            </Scatter>
+          </ScatterChart>
+        </ResponsiveContainer>
+      </Flex>
+      <CreditScoreTips />
+      <Heading as="h2" size="lg" my={4}>
+        DTI and LTV Ratios
+      </Heading>
+      <Flex style={{ width: "100%", height: 300 }}>
+        <ResponsiveContainer>
+          <BarChart
+            data={data}
+            margin={{
+              top: 20,
+              right: 30,
+              left: 20,
+              bottom: 5,
+            }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="DTI" fill="#8884d8" name="Debt-to-Income Ratio (%)" />
+            <Bar dataKey="LTV" fill="#82ca9d" name="Loan-to-Value Ratio (%)" />
+          </BarChart>
+        </ResponsiveContainer>
+      </Flex>
+      <Flex direction="row" my={5}>
+        <Flex width="50%" pr={2}>
+          <LtvTips />
+        </Flex>
+        <Flex width="50%" pl={2}>
+          <DtiTips />
+        </Flex>
+      </Flex>
     </>
   );
 };
