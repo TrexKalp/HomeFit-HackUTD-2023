@@ -24,7 +24,10 @@ const Download = () => {
   };
 
   return (
-    <Button onClick={handleDownload} colorScheme="blue">
+    <Button onClick={handleDownload} colorScheme="blue" style={{
+      marginTop: "15%",
+      marginLeft: "50%"
+    }}>
       Download CSV
     </Button>
   );
