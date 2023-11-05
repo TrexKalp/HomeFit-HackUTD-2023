@@ -1,43 +1,50 @@
 import React, { useState, useEffect } from "react";
-import { Pie } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
-
-ChartJS.register(ArcElement, Tooltip, Legend);
+import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import axios from "axios";
 
 const Graphs = () => {
-  const [chartData, setChartData] = useState({});
+  const [approvalData, setApprovalData] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:3001/api/approval-counts")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setChartData({
-          labels: ["Approved", "Not Approved"],
-          datasets: [
-            {
-              label: "Approval Counts",
-              data: [data.approved, data.declined],
-              backgroundColor: [
-                "rgba(75, 192, 192, 0.2)",
-                "rgba(255, 99, 132, 0.2)",
-              ],
-              borderColor: ["rgba(75, 192, 192, 1)", "rgba(255, 99, 132, 1)"],
-              borderWidth: 1,
-            },
-          ],
-        });
-      })
-      .catch((error) => {
-        console.error("Error fetching data:", error);
-      });
+    const fetchApprovalStats = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3001/api/approval-counts"
+        );
+        setApprovalData([
+          { name: "Approved", value: response.data.approved },
+          { name: "Not Approved", value: response.data.notApproved },
+        ]);
+      } catch (error) {
+        console.error("Error fetching approval stats:", error);
+      }
+    };
+
+    fetchApprovalStats();
   }, []);
 
-  return <h2>Approval Pie Chart</h2>;
+  const COLORS = ["#0088FE", "#FF8042"];
+
+  return (
+    <PieChart width={400} height={400}>
+      <Pie
+        data={approvalData}
+        cx={200}
+        cy={200}
+        innerRadius={60}
+        outerRadius={80}
+        fill="#8884d8"
+        paddingAngle={5}
+        dataKey="value"
+      >
+        {approvalData.map((entry, index) => (
+          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+        ))}
+      </Pie>
+      <Tooltip />
+      <Legend />
+    </PieChart>
+  );
 };
 
 export default Graphs;

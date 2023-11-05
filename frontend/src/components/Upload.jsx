@@ -11,7 +11,7 @@ import {
   AlertIcon,
   Text,
 } from "@chakra-ui/react";
-import { Pie } from "react-chartjs-2";
+import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 
 export default function Upload() {
   const [file, setFile] = useState(null);
@@ -51,18 +51,12 @@ export default function Upload() {
     }
   };
 
-  const data = {
-    labels: ["Approved", "Declined"],
-    datasets: [
-      {
-        label: "Approval Stats",
-        data: [approvalStats.approved, approvalStats.declined],
-        backgroundColor: ["rgba(75, 192, 192, 0.2)", "rgba(255, 99, 132, 0.2)"],
-        borderColor: ["rgba(75, 192, 192, 1)", "rgba(255, 99, 132, 1)"],
-        borderWidth: 1,
-      },
-    ],
-  };
+  const COLORS = ["#0088FE", "#FF8042"];
+
+  const pieData = [
+    { name: "Approved", value: approvalStats.approved },
+    { name: "Declined", value: approvalStats.declined },
+  ];
 
   return (
     <Flex minH={"80vh"} align={"center"} justify={"center"}>
@@ -97,15 +91,14 @@ export default function Upload() {
             >
               Upload
             </Button>
+            {uploadStatus && (
+              <Alert status={uploadStatus.type}>
+                <AlertIcon />
+                {uploadStatus.message}
+              </Alert>
+            )}
             <Stack spacing={4}>
-              {/* ...file input and upload button */}
-              {uploadStatus && (
-                <Alert status={uploadStatus.type}>
-                  <AlertIcon />
-                  {uploadStatus.message}
-                </Alert>
-              )}
-              {approvalStats && ( // Conditional rendering based on approvalStats
+              {approvalStats && (
                 <Text>
                   Approved: {approvalStats.approved} | Declined:{" "}
                   {approvalStats.declined}
@@ -116,7 +109,26 @@ export default function Upload() {
         </Box>
       </Stack>
       <Box width={"50%"}>
-        <Pie data={data} />
+        <PieChart width={400} height={400}>
+          <Pie
+            data={pieData}
+            cx={200}
+            cy={200}
+            outerRadius={80}
+            fill="#8884d8"
+            dataKey="value"
+            label
+          >
+            {pieData.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[index % COLORS.length]}
+              />
+            ))}
+          </Pie>
+          <Tooltip />
+          <Legend />
+        </PieChart>
       </Box>
     </Flex>
   );

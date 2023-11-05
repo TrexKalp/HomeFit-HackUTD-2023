@@ -6,6 +6,7 @@ const fs = require("fs");
 const app = express();
 const upload = multer({ dest: "uploads/" });
 const mongoose = require("mongoose");
+const path = require("path");
 
 // Database connection parameters
 const connectionParams = {
@@ -61,6 +62,19 @@ function checkEligibility(data) {
     suggestions,
   };
 }
+
+app.get("/get-csv", (req, res) => {
+  const filePath = path.join(__dirname, "eligibility_data.csv"); // Ensure this is the correct path to your CSV file
+
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.status(500).send("Error reading the CSV file.");
+    } else {
+      res.setHeader("Content-Type", "text/csv");
+      res.send(data);
+    }
+  });
+});
 
 // // Function to format the response consistently for both endpoints
 // function formatResponse({ approved, PMI, suggestions }) {
@@ -211,9 +225,9 @@ app.post("/api/check-eligibility", async (req, res) => {
     // Respond with approval results and current statistics for approvals
     res.json({
       approved: approved ? "Yes" : "No",
-      PMI: PMI ? `Required - $${PMI.toFixed(2)} per month` : "Not Required",
-      suggestions: suggestions,
-      statistics: approvalStatistics,
+      // PMI: PMI ? `Required - $${PMI.toFixed(2)} per month` : "Not Required",
+      // suggestions: suggestions,
+      // statistics: approvalStatistics,
     });
   } catch (error) {
     // If an error occurs, send a 500 server error response
