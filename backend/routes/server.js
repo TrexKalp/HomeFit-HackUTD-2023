@@ -1,4 +1,5 @@
 const express = require("express");
+// import express from "express";
 const cors = require("cors");
 const multer = require("multer");
 const fastCsv = require("fast-csv");
@@ -7,7 +8,7 @@ const app = express();
 const upload = multer({ dest: "uploads/" });
 const mongoose = require("mongoose");
 const CustomerData = require("../modals/LoanDataModel.js");
-const { OpenAIApi } = require("openai");
+const {Configuration, OpenAIApi} = require("openai");
 require("dotenv").config();
 
 // Database connection parameters
@@ -16,9 +17,11 @@ const connectionParams = {
   useUnifiedTopology: true,
 };
 
-const openai = new OpenAIApi({
-  apiKey: process.env.GPT_KEY,
+const configuration = new Configuration({
+  apiKey: "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",
 });
+
+const openai = new OpenAIApi(configuration);
 
 // Replace with your actual MongoDB connection string
 const url = `mongodb+srv://root:rootroot@eag.z6jqmoe.mongodb.net/train_data?retryWrites=true&w=majority`;
@@ -93,26 +96,12 @@ async function checkEligibility(data) {
 
 
 const getGPTPrompts = async (prompt) => {
-  const completion = await openai.chat.completions.create({
-    messages: [{ role: "system", content: prompt }],
-    model: "gpt-3.5-turbo",
-  });
-
-  try {
-    if (prompt == null) {
-      throw new Error("Uh oh, no prompt was provided");
-    }
-    // trigger OpenAI completion
-    const completion = await openai.createCompletion({
+    const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
-      prompt,
+      messages: prompt,
     });
-  } catch (error) {
-    console.log(error.message);
-  }
 
-  console.log(completion.choices[0]);
-  console.log(completion.choices[1]);
+  console.log(completion);
 }
 
 app.post("/api/process-batch", upload.single("file"), async (req, res) => {
