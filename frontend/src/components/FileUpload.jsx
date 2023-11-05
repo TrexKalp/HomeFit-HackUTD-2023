@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Container, Input, Button, VStack, useToast } from "@chakra-ui/react";
+import {
+  Container,
+  Input,
+  Button,
+  VStack,
+  useToast,
+  Box,
+  Flex,
+} from "@chakra-ui/react";
 
 const FileUpload = () => {
   const [file, setFile] = useState(null);
@@ -39,14 +47,24 @@ const FileUpload = () => {
   };
 
   return (
-    <Container centerContent p={4}>
-      <VStack spacing={5}>
-        <Input type="file" onChange={onFileChange} p={1} accept=".csv" />
-        <Button colorScheme="blue" onClick={onFileUpload} disabled={!file}>
-          Upload
-        </Button>
-      </VStack>
-    </Container>
+    <Flex width="full" align="center" justifyContent="center">
+      <Box
+        p={5}
+        maxW="sm"
+        borderWidth="1px"
+        borderRadius="lg"
+        overflow="hidden"
+        boxShadow="md"
+        bg="white"
+      >
+        <VStack spacing={5}>
+          <Input type="file" onChange={onFileChange} p={1} accept=".csv" />
+          <Button colorScheme="blue" onClick={onFileUpload} disabled={!file}>
+            Upload
+          </Button>
+        </VStack>
+      </Box>
+    </Flex>
   );
 };
 
