@@ -5,30 +5,24 @@ const fastCsv = require("fast-csv");
 const fs = require("fs");
 const app = express();
 const upload = multer({ dest: "uploads/" });
-const port = 3001; // or another port that you prefer
-const mongoose=require('mongoose')
-const url = `mongodb+srv://root:rootroot@eag.z6jqmoe.mongodb.net/train_data?retryWrites=true&w=majority`;
-const CustomerData = require('../modals/LoanDataModel');
-const connectionParams={
-    useNewUrlParser: true,
-    useUnifiedTopology: true 
-}
-mongoose.connect(url,connectionParams)
-    .then( () => {
-        console.log('Connected to the database ')
-    })
-    .catch( (err) => {
-        console.error(`Error connecting to the database. n${err}`);
-    })
-    app.get("/dogs", async (req, res) => {
-      const allDogs = await CustomerData.find({});
-      return res.status(200).json(allDogs);
-    });
+const mongoose = require("mongoose");
 
+// Database connection parameters
+const connectionParams = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+};
+
+// Replace with your actual MongoDB connection string
+// const url = `your_mongodb_connection_string`;
+
+// mongoose
+//   .connect(url, connectionParams)
+//   .then(() => console.log("Connected to the database"))
+//   .catch((err) => console.error(`Error connecting to the database.\n${err}`));
 
 app.use(cors());
 app.use(express.json());
-
 // Function to check eligibility, extracted from your existing logic
 function checkEligibility(data) {
   const income = parseFloat(data.GrossMonthlyIncome);
@@ -68,15 +62,15 @@ function checkEligibility(data) {
   };
 }
 
-// Function to format the response consistently for both endpoints
-function formatResponse({ approved, PMI, suggestions }) {
-  return {
-    approved: approved ? "Yes" : "No",
-    PMI:
-      PMI !== null ? `Required - $${PMI.toFixed(2)} per month` : "Not Required",
-    suggestions,
-  };
-}
+// // Function to format the response consistently for both endpoints
+// function formatResponse({ approved, PMI, suggestions }) {
+//   return {
+//     approved: approved ? "Yes" : "No",
+//     PMI:
+//       PMI !== null ? `Required - $${PMI.toFixed(2)} per month` : "Not Required",
+//     suggestions,
+//   };
+// }
 
 app.post("/api/process-batch", upload.single("file"), (req, res) => {
   if (!req.file) {
@@ -107,6 +101,90 @@ app.post("/api/process-batch", upload.single("file"), (req, res) => {
       console.error("Error processing the file:", error);
       res.status(500).send("Error processing the file");
     });
+});
+
+// Append eligibility check data to CSV
+app.post("/api/save-eligibility-check", (req, res) => {
+  const { grossMonthlyIncome, creditScore, ...rest } = req.body;
+  const csvStream = fastCsv.format({
+    headers: true,
+    includeEndRowDelimiter: true,
+  });
+
+  fs.createReadStream(csvFilePath)
+    .on("error", () => {
+      // Handle file not existing, create the file and write headers
+      csvStream
+        .pipe(fs.createWriteStream(csvFilePath, { flags: "a" }))
+        .on("finish", () => res.status(200).send("Eligibility check saved."));
+    })
+    .pipe(csvStream)
+    .pipe(fs.createWriteStream(csvFilePath, { flags: "a" })); // Append mode
+
+  csvStream.write({ grossMonthlyIncome, creditScore, ...rest });
+  csvStream.end();
+});
+
+app.post("/api/check-eligibility", (req, res) => {
+  const {
+    grossMonthlyIncome,
+    monthlyCarPayment,
+    monthlyCreditCardPayment,
+    studentLoanPayment,
+    homeAppraisedValue,
+    estMonthlyMortgagePayment,
+    downPaymentAmount,
+    creditScore,
+  } = req.body;
+
+  const income = parseFloat(grossMonthlyIncome);
+  const carPayment = parseFloat(monthlyCarPayment);
+  const creditCardPayment = parseFloat(monthlyCreditCardPayment);
+  const studentPayment = parseFloat(studentLoanPayment);
+  const appraisedValue = parseFloat(homeAppraisedValue);
+  const mortgagePayment = parseFloat(estMonthlyMortgagePayment);
+  const downPayment = parseFloat(downPaymentAmount);
+  const score = parseInt(creditScore, 10);
+  // Correct calculation using parsed values
+  const loanAmount = appraisedValue - downPayment;
+  const LTV = (loanAmount / appraisedValue) * 100;
+
+  const monthlyDebtPayments =
+    carPayment + creditCardPayment + studentPayment + mortgagePayment;
+  const DTI = (monthlyDebtPayments / income) * 100;
+  const FEDTI = (mortgagePayment / income) * 100;
+
+  console.log({ LTV, DTI, FEDTI, score });
+
+  let approved = score >= 640 && LTV < 95 && DTI < 43 && FEDTI <= 28;
+  let PMI = null;
+  let suggestions = [];
+
+  if (LTV >= 80 && LTV < 95) {
+    PMI = (loanAmount * 0.01) / 12; // PMI calculation
+  }
+
+  if (!approved) {
+    if (score < 640) suggestions.push("Improve your credit score.");
+    if (LTV >= 80) {
+      suggestions.push("Increase your down payment amount.");
+      if (PMI) {
+        suggestions.push(
+          `Consider the additional cost of Private Mortgage Insurance (PMI): $${PMI.toFixed(
+            2
+          )} per month.`
+        );
+      }
+    }
+    if (DTI >= 43) suggestions.push("Pay off some current debt.");
+    if (FEDTI > 28) suggestions.push("Look for a less expensive home.");
+  }
+
+  res.json({
+    approved: approved ? "Yes" : "No",
+    PMI: PMI ? `Required - $${PMI.toFixed(2)} per month` : "Not Required",
+    suggestions,
+  });
 });
 
 const PORT = process.env.PORT || 3001;
