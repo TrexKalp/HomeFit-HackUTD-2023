@@ -37,6 +37,7 @@ const getFieldData = async (fields) => {
   for (let i = 0; i < fields.length; i++) {
     projection[fields[i]] = 1;
   }
+  projection["Output"] = 1
   const data = await CustomerData.find({}, projection);
   console.log(data);
   return data;
