@@ -14,12 +14,23 @@ const connectionParams = {
 };
 
 // Replace with your actual MongoDB connection string
-// const url = `your_mongodb_connection_string`;
+const url = `mongodb+srv://root:rootroot@eag.z6jqmoe.mongodb.net/?retryWrites=true&w=majority`;
 
-// mongoose
-//   .connect(url, connectionParams)
-//   .then(() => console.log("Connected to the database"))
-//   .catch((err) => console.error(`Error connecting to the database.\n${err}`));
+mongoose
+  .connect(url, connectionParams)
+  .then(() => console.log("Connected to the database"))
+  .catch((err) => console.error(`Error connecting to the database.\n${err}`));
+
+
+const getFieldData = (fields) => {
+  const projection = {};
+  for(let i = 0; i < fields.length; i++) {
+    projection[fields[i]] = 1;
+  }
+  const data = CustomerData.find({})
+  console.log(data);
+  return data;
+};
 
 app.use(cors());
 app.use(express.json());
@@ -45,15 +56,32 @@ function checkEligibility(data) {
   let approved = score >= 640 && LTV <= 95 && DTI <= 43 && FEDTI <= 28;
   let PMI = null;
   let suggestions = [];
+  let fields = []
 
   if (LTV > 80) {
     PMI = (loanAmount * 0.01) / 12;
     suggestions.push("Consider the additional cost of PMI.");
+    fields.push("LTV")
   }
 
-  if (score < 640) suggestions.push("Improve your credit score.");
-  if (DTI >= 43) suggestions.push("Reduce your debt.");
-  if (FEDTI > 28) suggestions.push("Look for a less expensive home.");
+  if (score < 640) {
+    suggestions.push("Improve your credit score.");
+    fields.push("CreditScore")
+  }
+  if (DTI >= 43) {
+    suggestions.push("Reduce your debt.");
+    fields.push("DTI")
+  }
+  if (FEDTI > 28) {
+    suggestions.push("Look for a less expensive home.");
+    fields.push("FEDTI")
+  }
+
+  let filteredData = null;
+  if(approved === false) {
+    filteredData = getFieldData(fields);
+    console.log(filteredData)
+  }
 
   return {
     approved,
