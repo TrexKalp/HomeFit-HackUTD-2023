@@ -18,7 +18,7 @@ const connectionParams = {
 };
 
 const configuration = new Configuration({
-  apiKey: "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",
+  apiKey: "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",
 });
 
 const openai = new OpenAIApi(configuration);
@@ -96,12 +96,18 @@ async function checkEligibility(data) {
 
 
 const getGPTPrompts = async (prompt) => {
-    const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: prompt,
-    });
-
-  console.log(completion);
+  const completion = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo",
+    messages: [
+      {
+        "role": "system",
+        "content": prompt
+      }
+    ],
+  });
+  const resp1 = completion.data.choices[0].message.content;
+  console.log(resp1);
+  return resp1;
 }
 
 app.post("/api/process-batch", upload.single("file"), async (req, res) => {
@@ -289,7 +295,7 @@ app.get("/api/approval-counts", (req, res) => {
 
 app.get("/api/suggestions", async(req, res) => {
   const prompt = req.body.prompt;
-  const responses = getGPTPrompts(prompt);
+  const responses = await getGPTPrompts(prompt);
   res.json({
     "response": responses
   });
