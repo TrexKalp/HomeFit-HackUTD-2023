@@ -6,7 +6,7 @@ const fastCsv = require("fast-csv");
 const fs = require("fs");
 const app = express();
 const upload = multer({ dest: "uploads/" });
-const mongoose = require("mongoose");
+// const mongoose = require("mongoose");
 const path = require("path");
 const CustomerData = require("../modals/LoanDataModel.js");
 const { Configuration, OpenAIApi } = require("openai");
@@ -27,19 +27,19 @@ const openai = new OpenAIApi(configuration);
 //Replace with your actual MongoDB connection string
 const url = `mongodb+srv://root:rootroot@eag.z6jqmoe.mongodb.net/train_data?retryWrites=true&w=majority`;
 
-mongoose
-  .connect(url, connectionParams)
-  .then(() => console.log("Connected to the database"))
-  .catch((err) => console.error(`Error connecting to the database.\n${err}`));
+// mongoose
+//   .connect(url, connectionParams)
+//   .then(() => console.log("Connected to the database"))
+//   .catch((err) => console.error(`Error connecting to the database.\n${err}`));
 
-const getFieldData = async (fields) => {
-  const projection = {};
-  for (let i = 0; i < fields.length; i++) {
-    projection[fields[i]] = 1;
-  }
-  const data = await CustomerData.find({},projection)
-  return data;
-};
+// const getFieldData = async (fields) => {
+//   const projection = {};
+//   for (let i = 0; i < fields.length; i++) {
+//     projection[fields[i]] = 1;
+//   }
+//   const data = await CustomerData.find({}, projection);
+//   return data;
+// };
 
 app.use(cors());
 app.use(express.json());
@@ -243,7 +243,6 @@ app.post("/api/check-eligibility", async (req, res) => {
   const DTI = (monthlyDebtPayments / income) * 100;
   const FEDTI = (mortgagePayment / income) * 100;
 
-
   let approved = score >= 640 && LTV < 95 && DTI < 43 && FEDTI <= 28;
   let PMI = null;
   let suggestions = [];
@@ -273,15 +272,14 @@ app.post("/api/check-eligibility", async (req, res) => {
     fields.push("DTI");
     if (FEDTI > 28) suggestions.push("Look for a less expensive home.");
     fields.push("FEDTI");
-    
   }
-  let filteredData = null;
+  // let filteredData = null;
   // Now, increment counters based on the approval status
   if (approved) {
     approvalStatistics.approvedCount++;
   } else {
     approvalStatistics.notApprovedCount++;
-    filteredData = await getFieldData(fields);
+    // filteredData = await getFieldData(fields);
   }
 
   // Prepare data for the CSV file
@@ -346,6 +344,36 @@ app.get("/api/suggestions", async (req, res) => {
   const responses = await getGPTPrompts(prompt);
   res.json({
     response: responses,
+  });
+});
+
+app.post("/api/upload", upload.single("file"), (req, res) => {
+  if (!req.file) {
+    return res.status(400).send("No file uploaded.");
+  }
+
+  const filePath = req.file.path;
+  const targetPath = path.join(__dirname, "eligibility_data.csv");
+
+  fs.readFile(filePath, (readError, data) => {
+    if (readError) {
+      return res.status(500).send("Error reading the uploaded file.");
+    }
+
+    fs.writeFile(targetPath, data, (writeError) => {
+      if (writeError) {
+        return res.status(500).send("Error overwriting the CSV file.");
+      }
+
+      // Clean up the uploaded file
+      fs.unlink(filePath, (unlinkError) => {
+        if (unlinkError) {
+          console.error(`Error removing the temporary file: ${unlinkError}`);
+          // Not sending a response error here because the main operation succeeded
+        }
+        res.send("File uploaded and processed successfully.");
+      });
+    });
   });
 });
 

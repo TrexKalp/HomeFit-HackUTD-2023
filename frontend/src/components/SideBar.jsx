@@ -37,9 +37,8 @@ import Download from "./Download";
 
 const LinkItems = [
   { name: "Home", icon: FiHome },
-  { name: "Upload", icon: AiOutlineCloudUpload },
   { name: "Visualization", icon: BsGraphUp },
-  { name: "Download", icon: AiOutlineDownload },
+  { name: "Upload & Export", icon: AiOutlineDownload },
 ];
 
 const SidebarContent = ({ onClose, ...rest }) => {
@@ -137,7 +136,7 @@ const SidebarWithHeader = () => {
           <Routes>
             <Route exact path="/" element={<Page1 />} />
             <Route exact path="/home" element={<Page1 />} />
-            <Route path="/Upload" element={<Upload />} />
+            <Route path="/Upload & Export" element={<Download />} />
             <Route path="/visualization" element={<Graphs />} />
             <Route path="/download" element={<Download />} />
             {/*<Route path="/settings" element={<Settings />} />

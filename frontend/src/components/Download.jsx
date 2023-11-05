@@ -2,6 +2,7 @@ import React from "react";
 import axios from "axios";
 import { Button, Heading } from "@chakra-ui/react";
 import CsvDataTable from "./CsvDataTable";
+import FileUpload from "./FileUpload";
 
 const Download = () => {
   const handleDownload = async () => {
@@ -27,6 +28,10 @@ const Download = () => {
   return (
     <>
       <Heading as="h2" size="xl" mb={4}>
+        Upload Your CSV Data
+      </Heading>
+      <FileUpload />
+      <Heading as="h2" size="xl" mb={4} mt={5}>
         View and Download Your CSV Data
       </Heading>
       <CsvDataTable />

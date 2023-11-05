@@ -15,8 +15,6 @@ import {
   Scatter,
   Label,
   Cell,
-  BarChart,
-  Bar,
 } from "recharts";
 import {
   Flex,
