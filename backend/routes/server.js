@@ -6,7 +6,7 @@ const fastCsv = require("fast-csv");
 const fs = require("fs");
 const app = express();
 const upload = multer({ dest: "uploads/" });
-const mongoose = require("mongoose");
+// const mongoose = require("mongoose");
 const path = require("path");
 const CustomerData = require("../modals/LoanDataModel.js");
 const { Configuration, OpenAIApi } = require("openai");
@@ -25,22 +25,22 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 // Replace with your actual MongoDB connection string
-const url = `mongodb+srv://root:rootroot@eag.z6jqmoe.mongodb.net/train_data?retryWrites=true&w=majority`;
+// const url = `mongodb+srv://root:rootroot@eag.z6jqmoe.mongodb.net/train_data?retryWrites=true&w=majority`;
 
-mongoose
-  .connect(url, connectionParams)
-  .then(() => console.log("Connected to the database"))
-  .catch((err) => console.error(`Error connecting to the database.\n${err}`));
+// mongoose
+//   .connect(url, connectionParams)
+//   .then(() => console.log("Connected to the database"))
+//   .catch((err) => console.error(`Error connecting to the database.\n${err}`));
 
-const getFieldData = async (fields) => {
-  const projection = {};
-  for (let i = 0; i < fields.length; i++) {
-    projection[fields[i]] = 1;
-  }
-  const data = await CustomerData.find({}, projection);
-  console.log(data);
-  return data;
-};
+// const getFieldData = async (fields) => {
+//   const projection = {};
+//   for (let i = 0; i < fields.length; i++) {
+//     projection[fields[i]] = 1;
+//   }
+//   const data = await CustomerData.find({}, projection);
+//   console.log(data);
+//   return data;
+// };
 
 app.use(cors());
 app.use(express.json());
@@ -249,14 +249,14 @@ app.post("/api/check-eligibility", async (req, res) => {
     if (FEDTI > 28) suggestions.push("Look for a less expensive home.");
     fields.push("FEDTI");
   }
-  let filteredData = null;
-  // Now, increment counters based on the approval status
-  if (approved) {
-    approvalStatistics.approvedCount++;
-  } else {
-    approvalStatistics.notApprovedCount++;
-    filteredData = await getFieldData(fields);
-  }
+  // let filteredData = null;
+  // // Now, increment counters based on the approval status
+  // if (approved) {
+  //   approvalStatistics.approvedCount++;
+  // } else {
+  //   approvalStatistics.notApprovedCount++;
+  //   filteredData = await getFieldData(fields);
+  // }
 
   // Prepare data for the CSV file
   const csvData = {
@@ -282,7 +282,7 @@ app.post("/api/check-eligibility", async (req, res) => {
       PMI: PMI ? `Required - $${PMI.toFixed(2)} per month` : "Not Required",
       suggestions: suggestions,
       statistics: approvalStatistics,
-      fields: filteredData,
+      // fields: filteredData,
     });
   } catch (error) {
     // If an error occurs, send a 500 server error response

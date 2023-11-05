@@ -13,7 +13,13 @@ import {
   SliderTrack,
   SliderFilledTrack,
   SliderThumb,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  CloseButton,
 } from "@chakra-ui/react";
+
 import { useState } from "react";
 
 export default function Page1() {
@@ -28,6 +34,45 @@ export default function Page1() {
   const [estMonthlyMortgagePayment, setEstMonthlyMortgagePayment] =
     useState(""); // Added state for estimated monthly mortgage payment
 
+  const [alertInfo, setAlertInfo] = useState({ status: "", message: "" });
+  const [isAlertVisible, setIsAlertVisible] = useState(false);
+  const [alerts, setAlerts] = useState([]);
+  const [advice, setAdvice] = useState(""); // State to store the user advice
+
+  async function getFinancialAdvice(financialSituation) {
+    try {
+      const response = await fetch("/api/suggestions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt: financialSituation }),
+      });
+      const data = await response.json();
+      setAdvice(data.response); // Update state with the advice from ChatGPT
+    } catch (error) {
+      console.error("Error fetching financial advice:", error);
+    }
+  }
+  // Function to add a new alert to the stack
+  // Function to add a new alert to the stack, removing the first one if the max is reached
+  const addAlert = (status, message) => {
+    setAlerts((currentAlerts) => {
+      // If adding the new alert would exceed the max, remove the oldest one
+      if (currentAlerts.length >= 5) {
+        // Remove the first item
+        currentAlerts.shift();
+      }
+      // Add the new alert
+      return [...currentAlerts, { status, message }];
+    });
+  };
+
+  // Function to remove an alert from the stack
+  const removeAlert = (index) => {
+    setAlerts((currentAlerts) => currentAlerts.filter((_, i) => i !== index));
+  };
+
   // Function to handle form submission
   const checkEligibility = async () => {
     const financialData = {
@@ -41,10 +86,18 @@ export default function Page1() {
       estMonthlyMortgagePayment, // Included in the data object
     };
 
+    const showAlert = (status, message) => {
+      setAlertInfo({ status, message });
+      setIsAlertVisible(true);
+    };
+
     const minimumDownPaymentRequired = homeAppraisedValue * 0.2; // 20% of home value
     if (downPaymentAmount < minimumDownPaymentRequired) {
-      alert(`Your down payment must be at least ${minimumDownPaymentRequired}`);
-      return false;
+      showAlert(
+        "error",
+        `Your down payment must be at least ${minimumDownPaymentRequired}`
+      );
+      return;
     }
 
     try {
@@ -66,37 +119,38 @@ export default function Page1() {
       const data = await response.json();
 
       if (data.approved === "Yes") {
-        alert("Congratulations! You are eligible to buy a home.");
+        addAlert("success", "Congratulations! You are eligible to buy a home.");
       } else {
         const suggestionsMessage =
           data.suggestions.length > 0
             ? `Suggestions: ${data.suggestions.join(", ")}`
             : "No suggestions available.";
-        alert(`Eligibility Check: No\n${suggestionsMessage}`);
+        addAlert("info", `Eligibility Check: No\n${suggestionsMessage}`);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-      alert(
+      addAlert(
+        "error",
         "An error occurred while checking eligibility. Please try again later."
       );
     }
   };
 
   return (
-    <Flex minH={"80vh"} align={"center"} justify={"center"}>
-      <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
+    <Flex minH={"80vh"} align={"center"} justify={"center"} py={4} px={4}>
+      <Stack spacing={8} mx={"auto"} maxW={"xxl"} maxH={"xxxl"}>
         <Stack align={"center"}>
           <Heading fontSize={"4xl"} textAlign={"center"}>
             Are you ready to buy a home? Let's Check!
           </Heading>
         </Stack>
         <Box
-          rounded={"lg"}
+          rounded={"xxl"}
           bg={useColorModeValue("white", "gray.700")}
           boxShadow={"lg"}
           p={8}
         >
-          <Stack spacing={4}>
+          <Stack spacing={4} maxH={"xxl"}>
             {/* Slider for Gross Monthly Income */}
             <FormControl id="monthlyIncome" isRequired>
               <FormLabel>Gross Monthly Income: ${grossMonthlyIncome}</FormLabel>
@@ -253,6 +307,55 @@ export default function Page1() {
           </Stack>
         </Box>
       </Stack>
+      <Flex
+        direction="column"
+        width={{ base: "100%", md: "auto" }}
+        // ml={{ md: 4 }}
+        // mt={{ base: 4, md: 0 }}
+        // position="fixed" // Fixed position to stack on the right
+        right="10px" // Right-aligned
+        top="10px" // Starting from the top
+        maxW={"450px"} // Take up the full width on mobile, but only 400px on larger screens
+      >
+        {alerts.map((alert, index) => (
+          <Alert
+            key={index}
+            status={alert.status}
+            borderRadius="md"
+            mb={2} // Margin bottom for spacing between alerts
+            zIndex="overlay" // Ensures it's above other content
+          >
+            <AlertIcon />
+            <Box flex="1">
+              <AlertTitle mr={2}>
+                {alert.status === "error" ? "Error" : "Success"}
+              </AlertTitle>
+              <AlertDescription>{alert.message}</AlertDescription>
+            </Box>
+            <CloseButton
+              position="absolute"
+              right="8px"
+              top="8px"
+              onClick={() => removeAlert(index)}
+            />
+          </Alert>
+        ))}
+        {advice && (
+          <Box
+            position="fixed"
+            top="0"
+            right="0"
+            m={4}
+            p={4}
+            bg="orange.100"
+            borderWidth="1px"
+            borderColor="orange.200"
+            borderRadius="md"
+          >
+            {advice}
+          </Box>
+        )}
+      </Flex>
     </Flex>
   );
 }
