@@ -26,6 +26,8 @@ import {
 import { MdCheckCircle } from "react-icons/md";
 import { DebtTips } from "./DebtTips";
 import { DownAppraisal } from "./DownAppraisal";
+import ApprovalPieChart from "./PieChart";
+import ApprovedTips from "./ApprovedTips";
 
 const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff8042"]; // Colors for the lines
 
@@ -207,6 +209,11 @@ const DebtGraph = () => {
         </Flex>
       </Flex>
       <DownAppraisal />
+      <Heading as="h2" size="lg" mb={4} mt={5}>
+        Requests Approved
+      </Heading>
+      <ApprovalPieChart />
+      <ApprovedTips />
     </>
   );
 };

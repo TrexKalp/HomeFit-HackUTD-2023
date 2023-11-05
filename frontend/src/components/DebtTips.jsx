@@ -17,7 +17,7 @@ export function DebtTips() {
       borderRadius="lg"
       overflow="hidden"
       p={5}
-      mt={5}
+      my={5}
       boxShadow="md"
     >
       <Heading as="h3" size="md" mb={4}>
